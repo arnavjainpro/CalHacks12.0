@@ -110,7 +110,8 @@ cp .env.example .env
 
 Required variables:
 - `PRIVATE_KEY` - Deployer wallet private key
-- `BASE_SEPOLIA_RPC_URL` - RPC endpoint (e.g., from Alchemy/Infura)
+- `BASE_RPC_URL` - Base mainnet RPC endpoint
+- `BASE_SEPOLIA_RPC_URL` - Base Sepolia testnet RPC endpoint
 - `BASESCAN_API_KEY` - For contract verification
 
 ### 2. Deploy to Base Sepolia
