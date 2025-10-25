@@ -14,11 +14,6 @@ contract PrescriptionRegistryTest is Test {
     address public pharmacist;
     address public patient;
 
-    // Multi-sig signers
-    address public signer1;
-    address public signer2;
-    address public signer3;
-
     uint256 public doctorTokenId;
     uint256 public pharmacistTokenId;
 
@@ -51,19 +46,9 @@ contract PrescriptionRegistryTest is Test {
         pharmacist = makeAddr("pharmacist");
         patient = makeAddr("patient");
 
-        // Setup multi-sig signers
-        signer1 = address(this);  // Test contract as first signer
-        signer2 = makeAddr("signer2");
-        signer3 = makeAddr("signer3");
-
-        address[] memory signers = new address[](3);
-        signers[0] = signer1;
-        signers[1] = signer2;
-        signers[2] = signer3;
-
         // Deploy contracts
         sbt = new MedicalCredentialSBT();
-        registry = new PrescriptionRegistry(address(sbt), signers);
+        registry = new PrescriptionRegistry(address(sbt));
 
         // Issue credentials
         doctorTokenId = sbt.issueCredential(
@@ -87,20 +72,9 @@ contract PrescriptionRegistryTest is Test {
 
     // ============ Helper Functions ============
 
-    function getPrescriptionViaMultiSig(uint256 prescriptionId) internal returns (PrescriptionRegistry.Prescription memory) {
-        // Signer1 proposes
-        bytes memory data = abi.encode(prescriptionId);
-        uint256 actionNonce = registry.proposeAdminAction(
-            PrescriptionRegistry.AdminActionType.AccessPrescription,
-            data
-        );
-
-        // Signer2 approves (now has 2-of-3)
-        vm.prank(signer2);
-        registry.approveAdminAction(actionNonce);
-
-        // Execute
-        return registry.executeGetPrescription(actionNonce);
+    function getPrescriptionAsAdmin(uint256 prescriptionId) internal view returns (PrescriptionRegistry.Prescription memory) {
+        // Owner can directly access any prescription
+        return registry.adminGetPrescription(prescriptionId);
     }
 
     // ============ Prescription Creation Tests ============
@@ -195,7 +169,7 @@ contract PrescriptionRegistryTest is Test {
         vm.stopPrank();
 
         // Verify status changed - admin checks it
-        PrescriptionRegistry.Prescription memory rx = getPrescriptionViaMultiSig(rxId);
+        PrescriptionRegistry.Prescription memory rx = getPrescriptionAsAdmin(rxId);
         assertTrue(rx.status == PrescriptionRegistry.PrescriptionStatus.Dispensed);
         assertEq(rx.pharmacistTokenId, pharmacistTokenId);
     }
@@ -259,7 +233,7 @@ contract PrescriptionRegistryTest is Test {
         vm.prank(doctor);
         registry.cancelPrescription(rxId, "Patient requested cancellation");
 
-        PrescriptionRegistry.Prescription memory rx = getPrescriptionViaMultiSig(rxId);
+        PrescriptionRegistry.Prescription memory rx = getPrescriptionAsAdmin(rxId);
         assertTrue(rx.status == PrescriptionRegistry.PrescriptionStatus.Cancelled);
     }
 
@@ -326,115 +300,26 @@ contract PrescriptionRegistryTest is Test {
         vm.stopPrank();
     }
 
-    function test_MultiSigCanAccessAuditTrails() external {
+    function test_AdminCanAccessAuditTrails() external {
         vm.startPrank(doctor);
         registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
         registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx2", 30, PATIENT_SECRET);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx3", 30, PATIENT_SECRET);
         vm.stopPrank();
 
-        vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx3", 30, PATIENT_SECRET);
-
-        vm.prank(pharmacist);
-        registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
-
-        // Multi-sig can access audit trails
-        bytes memory data = abi.encode(doctorTokenId);
-        uint256 actionNonce = registry.proposeAdminAction(
-            PrescriptionRegistry.AdminActionType.GetDoctorPrescriptions,
-            data
-        );
-
-        vm.prank(signer2);
-        registry.approveAdminAction(actionNonce);
-
-        uint256[] memory doctorRxIds = registry.executeGetDoctorPrescriptions(actionNonce);
+        // Owner can access audit trails directly
+        uint256[] memory doctorRxIds = registry.adminGetDoctorPrescriptions(doctorTokenId);
         assertEq(doctorRxIds.length, 3, "Should see all doctor prescriptions");
     }
 
-    function test_RevertWhen_NonSignerAccessesAuditTrails() external {
+    function test_RevertWhen_NonOwnerAccessesAdminFunctions() external {
         vm.prank(doctor);
         registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
-        // Non-signer cannot propose actions
+        // Non-owner cannot access admin functions
         vm.prank(pharmacist);
-        vm.expectRevert("Not a signer");
-        bytes memory data = abi.encode(doctorTokenId);
-        registry.proposeAdminAction(
-            PrescriptionRegistry.AdminActionType.GetDoctorPrescriptions,
-            data
-        );
-    }
-
-    function test_MultiSigAddSigner() external {
-        address newSigner = makeAddr("newSigner");
-
-        bytes memory data = abi.encode(newSigner);
-        uint256 actionNonce = registry.proposeAdminAction(
-            PrescriptionRegistry.AdminActionType.AddSigner,
-            data
-        );
-
-        vm.prank(signer2);
-        registry.approveAdminAction(actionNonce);
-
-        registry.executeAddSigner(actionNonce);
-
-        assertTrue(registry.isSigner(newSigner));
-        assertEq(registry.getSignerCount(), 4);
-    }
-
-    function test_MultiSigRemoveSigner() external {
-        bytes memory data = abi.encode(signer3);
-        uint256 actionNonce = registry.proposeAdminAction(
-            PrescriptionRegistry.AdminActionType.RemoveSigner,
-            data
-        );
-
-        vm.prank(signer2);
-        registry.approveAdminAction(actionNonce);
-
-        registry.executeRemoveSigner(actionNonce);
-
-        assertFalse(registry.isSigner(signer3));
-        assertEq(registry.getSignerCount(), 2);
-    }
-
-    function test_RevertWhen_InsufficientSignatures() external {
-        vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
-
-        // Propose action (1 signature from proposer)
-        bytes memory data = abi.encode(rxId);
-        uint256 actionNonce = registry.proposeAdminAction(
-            PrescriptionRegistry.AdminActionType.AccessPrescription,
-            data
-        );
-
-        // Try to execute without 2nd signature
-        vm.expectRevert("Insufficient signatures");
-        registry.executeGetPrescription(actionNonce);
-    }
-
-    function test_RevertWhen_AlreadyExecuted() external {
-        vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
-
-        bytes memory data = abi.encode(rxId);
-        uint256 actionNonce = registry.proposeAdminAction(
-            PrescriptionRegistry.AdminActionType.AccessPrescription,
-            data
-        );
-
-        vm.prank(signer2);
-        registry.approveAdminAction(actionNonce);
-
-        // Execute once
-        registry.executeGetPrescription(actionNonce);
-
-        // Try to execute again
-        vm.expectRevert("Already executed");
-        registry.executeGetPrescription(actionNonce);
+        vm.expectRevert();
+        registry.adminGetDoctorPrescriptions(doctorTokenId);
     }
 
     // ============ Fuzz Tests ============
@@ -464,7 +349,7 @@ contract PrescriptionRegistryTest is Test {
             vm.prank(pharmacist);
             registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
 
-            PrescriptionRegistry.Prescription memory rx = getPrescriptionViaMultiSig(rxId);
+            PrescriptionRegistry.Prescription memory rx = getPrescriptionAsAdmin(rxId);
             assertTrue(rx.status == PrescriptionRegistry.PrescriptionStatus.Dispensed);
         } else {
             vm.prank(pharmacist);
@@ -545,25 +430,22 @@ contract PrescriptionRegistryTest is Test {
         registry.getPrescriptionAsDoctor(rxId);
     }
 
-    function test_MultiSigCanAccessAnyPrescription() external {
+    function test_AdminCanAccessAnyPrescription() external {
         vm.prank(doctor);
         uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
-        // Multi-sig can access any prescription
-        PrescriptionRegistry.Prescription memory rx = getPrescriptionViaMultiSig(rxId);
+        // Owner can access any prescription directly
+        PrescriptionRegistry.Prescription memory rx = getPrescriptionAsAdmin(rxId);
         assertEq(rx.prescriptionId, rxId);
     }
 
-    function test_RevertWhen_NonSignerAccessesPrescription() external {
+    function test_RevertWhen_NonOwnerAccessesPrescription() external {
         vm.prank(doctor);
         uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
+        // Non-owner cannot access admin functions
         vm.prank(pharmacist);
-        vm.expectRevert("Not a signer");
-        bytes memory data = abi.encode(rxId);
-        registry.proposeAdminAction(
-            PrescriptionRegistry.AdminActionType.AccessPrescription,
-            data
-        );
+        vm.expectRevert();
+        registry.adminGetPrescription(rxId);
     }
 }
