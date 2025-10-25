@@ -271,3 +271,27 @@ export function useBatchPrescriptionStatus(prescriptionIds: bigint[]) {
     isLoading,
   };
 }
+
+/**
+ * Hook to get patient prescription history (doctor only, for abuse detection)
+ */
+export function usePatientPrescriptionHistory(patientDataHash?: `0x${string}`) {
+  const { address } = useAccount();
+
+  const { data: prescriptionIds, isLoading, error, refetch } = useReadContract({
+    address: CONTRACTS.PrescriptionRegistry.address,
+    abi: CONTRACTS.PrescriptionRegistry.abi,
+    functionName: 'getPatientPrescriptionHistory',
+    args: [patientDataHash!],
+    query: {
+      enabled: !!address && !!patientDataHash && patientDataHash !== '0x',
+    },
+  });
+
+  return {
+    prescriptionIds: prescriptionIds as bigint[] | undefined,
+    isLoading,
+    error,
+    refetch,
+  };
+}

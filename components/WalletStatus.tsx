@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { Wallet, ConnectWallet, WalletDropdown, WalletDropdownDisconnect } from '@coinbase/onchainkit/wallet';
 import { Address, Avatar, Name, Identity } from '@coinbase/onchainkit/identity';
@@ -9,6 +10,19 @@ import { CredentialType } from '@/lib/contracts/config';
 export function WalletStatus() {
   const { isConnected } = useAccount();
   const { credential, isLoading } = useMyCredential();
+
+  useEffect(() => {
+    console.log('[WalletStatus] Is Connected:', isConnected);
+    console.log('[WalletStatus] Credential Loading:', isLoading);
+    console.log('[WalletStatus] Credential:', credential);
+    if (credential) {
+      const isValid = credential.isActive && BigInt(Date.now()) < credential.expiresAt * 1000n;
+      console.log('[WalletStatus] Credential Badge:');
+      console.log('  - Label:', credential.credentialType === CredentialType.Doctor ? 'Doctor' : 'Pharmacist');
+      console.log('  - Is Valid:', isValid);
+      console.log('  - Color:', isValid ? 'Green' : 'Red');
+    }
+  }, [isConnected, isLoading, credential]);
 
   const getCredentialBadge = () => {
     if (!isConnected || isLoading) return null;

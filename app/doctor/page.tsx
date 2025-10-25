@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { WalletStatus } from '@/components/WalletStatus';
@@ -16,6 +16,22 @@ export default function DoctorDashboard() {
 
   const isDoctor = credential?.credentialType === CredentialType.Doctor;
   const hasValidCredential = credential?.isActive && BigInt(Date.now()) < credential.expiresAt * 1000n;
+
+  useEffect(() => {
+    console.log('[DoctorDashboard] Is Connected:', isConnected);
+    console.log('[DoctorDashboard] Credential Loading:', credentialLoading);
+    console.log('[DoctorDashboard] Credential:', credential);
+    console.log('[DoctorDashboard] Is Doctor:', isDoctor);
+    console.log('[DoctorDashboard] Has Valid Credential:', hasValidCredential);
+    if (credential) {
+      console.log('[DoctorDashboard] Credential Details:');
+      console.log('  - Type:', credential.credentialType === CredentialType.Doctor ? 'Doctor' : 'Other');
+      console.log('  - Is Active:', credential.isActive);
+      console.log('  - Expires At:', new Date(Number(credential.expiresAt) * 1000).toISOString());
+      console.log('  - Current Time:', new Date().toISOString());
+      console.log('  - Is Expired:', BigInt(Date.now()) >= credential.expiresAt * 1000n);
+    }
+  }, [isConnected, credentialLoading, credential, isDoctor, hasValidCredential]);
 
   if (!isConnected) {
     return (
@@ -142,12 +158,23 @@ export default function DoctorDashboard() {
               <h2 className="text-2xl font-bold">Actions</h2>
             </div>
             <div className="p-6">
-              <Link
-                href="/doctor/create"
-                className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
-              >
-                + Create New Prescription
-              </Link>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  href="/doctor/create"
+                  className="inline-block bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                >
+                  + Create New Prescription
+                </Link>
+                <Link
+                  href="/doctor/lookup"
+                  className="inline-block bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                >
+                  🔍 Lookup Patient History
+                </Link>
+              </div>
+              <div className="mt-4 text-sm text-gray-600">
+                <strong>Tip:</strong> Always check patient history before issuing prescriptions to detect potential abuse.
+              </div>
             </div>
           </div>
 

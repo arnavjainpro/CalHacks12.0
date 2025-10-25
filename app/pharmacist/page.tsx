@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { WalletStatus } from '@/components/WalletStatus';
@@ -14,6 +15,22 @@ export default function PharmacistDashboard() {
 
   const isPharmacist = credential?.credentialType === CredentialType.Pharmacist;
   const hasValidCredential = credential?.isActive && BigInt(Date.now()) < credential.expiresAt * 1000n;
+
+  useEffect(() => {
+    console.log('[PharmacistDashboard] Is Connected:', isConnected);
+    console.log('[PharmacistDashboard] Credential Loading:', credentialLoading);
+    console.log('[PharmacistDashboard] Credential:', credential);
+    console.log('[PharmacistDashboard] Is Pharmacist:', isPharmacist);
+    console.log('[PharmacistDashboard] Has Valid Credential:', hasValidCredential);
+    if (credential) {
+      console.log('[PharmacistDashboard] Credential Details:');
+      console.log('  - Type:', credential.credentialType === CredentialType.Pharmacist ? 'Pharmacist' : 'Other');
+      console.log('  - Is Active:', credential.isActive);
+      console.log('  - Expires At:', new Date(Number(credential.expiresAt) * 1000).toISOString());
+      console.log('  - Current Time:', new Date().toISOString());
+      console.log('  - Is Expired:', BigInt(Date.now()) >= credential.expiresAt * 1000n);
+    }
+  }, [isConnected, credentialLoading, credential, isPharmacist, hasValidCredential]);
 
   if (!isConnected) {
     return (

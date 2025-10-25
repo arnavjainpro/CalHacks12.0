@@ -6,40 +6,142 @@
         "name": "_credentialSBT",
         "type": "address",
         "internalType": "address"
-      },
-      {
-        "name": "_signers",
-        "type": "address[]",
-        "internalType": "address[]"
       }
     ],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "REQUIRED_SIGNATURES",
-    "inputs": [],
+    "name": "adminGetDoctorPrescriptions",
+    "inputs": [
+      {
+        "name": "doctorTokenId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
     "outputs": [
       {
         "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "approveAdminAction",
+    "name": "adminGetPatientPrescriptions",
     "inputs": [
       {
-        "name": "actionNonce",
+        "name": "patientDataHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "adminGetPharmacistDispensals",
+    "inputs": [
+      {
+        "name": "pharmacistTokenId",
         "type": "uint256",
         "internalType": "uint256"
       }
     ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "adminGetPrescription",
+    "inputs": [
+      {
+        "name": "prescriptionId",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct PrescriptionRegistry.Prescription",
+        "components": [
+          {
+            "name": "prescriptionId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "doctorTokenId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "patientDataHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "prescriptionDataHash",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          },
+          {
+            "name": "ipfsCid",
+            "type": "string",
+            "internalType": "string"
+          },
+          {
+            "name": "issuedAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "expiresAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "status",
+            "type": "uint8",
+            "internalType": "enum PrescriptionRegistry.PrescriptionStatus"
+          },
+          {
+            "name": "dispensedAt",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "pharmacistTokenId",
+            "type": "uint256",
+            "internalType": "uint256"
+          },
+          {
+            "name": "patientSecret",
+            "type": "bytes32",
+            "internalType": "bytes32"
+          }
+        ]
+      }
+    ],
+    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -155,146 +257,6 @@
   },
   {
     "type": "function",
-    "name": "executeAddSigner",
-    "inputs": [
-      {
-        "name": "actionNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "executeGetDoctorPrescriptions",
-    "inputs": [
-      {
-        "name": "actionNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "executeGetPharmacistDispensals",
-    "inputs": [
-      {
-        "name": "actionNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "executeGetPrescription",
-    "inputs": [
-      {
-        "name": "actionNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct PrescriptionRegistry.Prescription",
-        "components": [
-          {
-            "name": "prescriptionId",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "doctorTokenId",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "patientDataHash",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "prescriptionDataHash",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          },
-          {
-            "name": "ipfsCid",
-            "type": "string",
-            "internalType": "string"
-          },
-          {
-            "name": "issuedAt",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "expiresAt",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "status",
-            "type": "uint8",
-            "internalType": "enum PrescriptionRegistry.PrescriptionStatus"
-          },
-          {
-            "name": "dispensedAt",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "pharmacistTokenId",
-            "type": "uint256",
-            "internalType": "uint256"
-          },
-          {
-            "name": "patientSecret",
-            "type": "bytes32",
-            "internalType": "bytes32"
-          }
-        ]
-      }
-    ],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "executeRemoveSigner",
-    "inputs": [
-      {
-        "name": "actionNonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [],
-    "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
     "name": "getMyDispensals",
     "inputs": [],
     "outputs": [
@@ -318,6 +280,25 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getPatientPrescriptionHistory",
+    "inputs": [
+      {
+        "name": "patientDataHash",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
+      }
+    ],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -478,19 +459,6 @@
   },
   {
     "type": "function",
-    "name": "getSignerCount",
-    "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
     "name": "isPrescriptionDispensable",
     "inputs": [
       {
@@ -520,104 +488,23 @@
   },
   {
     "type": "function",
-    "name": "isSigner",
-    "inputs": [
+    "name": "owner",
+    "inputs": [],
+    "outputs": [
       {
-        "name": "account",
+        "name": "",
         "type": "address",
         "internalType": "address"
       }
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "pendingActions",
-    "inputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "nonce",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionType",
-        "type": "uint8",
-        "internalType": "enum PrescriptionRegistry.AdminActionType"
-      },
-      {
-        "name": "data",
-        "type": "bytes",
-        "internalType": "bytes"
-      },
-      {
-        "name": "approvalCount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "executed",
-        "type": "bool",
-        "internalType": "bool"
-      }
-    ],
-    "stateMutability": "view"
-  },
-  {
-    "type": "function",
-    "name": "proposeAdminAction",
-    "inputs": [
-      {
-        "name": "actionType",
-        "type": "uint8",
-        "internalType": "enum PrescriptionRegistry.AdminActionType"
-      },
-      {
-        "name": "data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "name": "renounceOwnership",
+    "inputs": [],
+    "outputs": [],
     "stateMutability": "nonpayable"
-  },
-  {
-    "type": "function",
-    "name": "signers",
-    "inputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
-    "stateMutability": "view"
   },
   {
     "type": "function",
@@ -631,6 +518,19 @@
       }
     ],
     "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "transferOwnership",
+    "inputs": [
+      {
+        "name": "newOwner",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
     "type": "function",
@@ -720,69 +620,50 @@
   },
   {
     "type": "event",
-    "name": "AdminActionApproved",
+    "name": "OwnershipTransferred",
     "inputs": [
       {
-        "name": "actionNonce",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "signer",
+        "name": "previousOwner",
         "type": "address",
         "indexed": true,
         "internalType": "address"
       },
       {
-        "name": "approvalCount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
+        "name": "newOwner",
+        "type": "address",
+        "indexed": true,
+        "internalType": "address"
       }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "AdminActionExecuted",
+    "name": "PatientHistoryAccessed",
     "inputs": [
       {
-        "name": "actionNonce",
-        "type": "uint256",
+        "name": "patientDataHash",
+        "type": "bytes32",
         "indexed": true,
-        "internalType": "uint256"
+        "internalType": "bytes32"
       },
       {
-        "name": "actionType",
-        "type": "uint8",
-        "indexed": false,
-        "internalType": "enum PrescriptionRegistry.AdminActionType"
-      }
-    ],
-    "anonymous": false
-  },
-  {
-    "type": "event",
-    "name": "AdminActionProposed",
-    "inputs": [
-      {
-        "name": "actionNonce",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "actionType",
-        "type": "uint8",
-        "indexed": false,
-        "internalType": "enum PrescriptionRegistry.AdminActionType"
-      },
-      {
-        "name": "proposer",
+        "name": "accessor",
         "type": "address",
         "indexed": true,
         "internalType": "address"
+      },
+      {
+        "name": "accessorTokenId",
+        "type": "uint256",
+        "indexed": true,
+        "internalType": "uint256"
+      },
+      {
+        "name": "accessedAt",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
       }
     ],
     "anonymous": false
@@ -930,29 +811,25 @@
     "anonymous": false
   },
   {
-    "type": "event",
-    "name": "SignerAdded",
+    "type": "error",
+    "name": "OwnableInvalidOwner",
     "inputs": [
       {
-        "name": "signer",
+        "name": "owner",
         "type": "address",
-        "indexed": true,
         "internalType": "address"
       }
-    ],
-    "anonymous": false
+    ]
   },
   {
-    "type": "event",
-    "name": "SignerRemoved",
+    "type": "error",
+    "name": "OwnableUnauthorizedAccount",
     "inputs": [
       {
-        "name": "signer",
+        "name": "account",
         "type": "address",
-        "indexed": true,
         "internalType": "address"
       }
-    ],
-    "anonymous": false
+    ]
   }
 ]

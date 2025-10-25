@@ -1,6 +1,7 @@
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { CONTRACTS, CredentialType, type Credential } from '@/lib/contracts/config';
 import { Address } from 'viem';
+import { useEffect } from 'react';
 
 /**
  * Hook to get the current user's credential
@@ -16,6 +17,20 @@ export function useMyCredential() {
       enabled: !!address,
     },
   });
+
+  useEffect(() => {
+    console.log('[useMyCredential] Address:', address);
+    console.log('[useMyCredential] Loading:', isLoading);
+    console.log('[useMyCredential] Error:', error);
+    console.log('[useMyCredential] Credential:', credential);
+    if (credential) {
+      const cred = credential as Credential;
+      console.log('[useMyCredential] Credential Type:', cred.credentialType === CredentialType.Doctor ? 'Doctor' : cred.credentialType === CredentialType.Pharmacist ? 'Pharmacist' : 'Unknown');
+      console.log('[useMyCredential] Is Active:', cred.isActive);
+      console.log('[useMyCredential] Expires At:', new Date(Number(cred.expiresAt) * 1000).toISOString());
+      console.log('[useMyCredential] Specialty:', cred.specialty);
+    }
+  }, [address, credential, isLoading, error]);
 
   return {
     credential: credential as Credential | undefined,
@@ -40,6 +55,13 @@ export function useHasValidCredential(credentialType?: CredentialType) {
       enabled: !!address && credentialType !== undefined,
     },
   });
+
+  useEffect(() => {
+    console.log('[useHasValidCredential] Address:', address);
+    console.log('[useHasValidCredential] Checking Type:', credentialType === CredentialType.Doctor ? 'Doctor' : credentialType === CredentialType.Pharmacist ? 'Pharmacist' : 'Undefined');
+    console.log('[useHasValidCredential] Loading:', isLoading);
+    console.log('[useHasValidCredential] Has Valid Credential:', hasValidCredential);
+  }, [address, credentialType, hasValidCredential, isLoading]);
 
   return {
     hasValidCredential: hasValidCredential as boolean | undefined,
