@@ -1,12 +1,14 @@
-import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
 import { CONTRACTS, type Prescription, PrescriptionStatus } from '@/lib/contracts/config';
 import { useEffect } from 'react';
+import { parseEventLogs } from 'viem';
 
 /**
  * Hook to create a prescription (doctor only)
  */
 export function useCreatePrescription() {
   const { writeContractAsync, isPending, error } = useWriteContract();
+  const publicClient = usePublicClient();
 
   const createPrescription = async (
     patientDataHash: `0x${string}`,
@@ -23,14 +25,37 @@ export function useCreatePrescription() {
     console.log('  - Patient Secret:', patientSecret);
 
     try {
-      const result = await writeContractAsync({
+      const txHash = await writeContractAsync({
         address: CONTRACTS.PrescriptionRegistry.address,
         abi: CONTRACTS.PrescriptionRegistry.abi,
         functionName: 'createPrescription',
         args: [patientDataHash, prescriptionDataHash, ipfsCid, validityDays, patientSecret],
       });
-      console.log('[useCreatePrescription] Success! Transaction hash:', result);
-      return result;
+      console.log('[useCreatePrescription] Transaction hash:', txHash);
+
+      // Wait for transaction receipt
+      if (!publicClient) {
+        throw new Error('Public client not available');
+      }
+
+      const receipt = await publicClient.waitForTransactionReceipt({ hash: txHash });
+      console.log('[useCreatePrescription] Transaction mined:', receipt);
+
+      // Parse the PrescriptionCreated event from logs
+      const logs = parseEventLogs({
+        abi: CONTRACTS.PrescriptionRegistry.abi,
+        logs: receipt.logs,
+        eventName: 'PrescriptionCreated',
+      });
+
+      if (logs.length === 0) {
+        throw new Error('PrescriptionCreated event not found in transaction logs');
+      }
+
+      const prescriptionId = logs[0].args.prescriptionId as bigint;
+      console.log('[useCreatePrescription] Prescription ID:', prescriptionId.toString());
+
+      return prescriptionId;
     } catch (err) {
       console.error('[useCreatePrescription] Error creating prescription:', err);
       throw err;

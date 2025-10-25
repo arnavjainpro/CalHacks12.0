@@ -83,8 +83,8 @@ export default function CreatePrescription() {
 
       const ipfsCid = await uploadPrescriptionToIPFS(metadata);
 
-      // 5. Create prescription on blockchain
-      const txHash = await createPrescription(
+      // 5. Create prescription on blockchain and get the prescription ID
+      const prescriptionIdBigInt = await createPrescription(
         patientHash,
         prescriptionHash,
         ipfsCid,
@@ -92,14 +92,11 @@ export default function CreatePrescription() {
         patientSecret
       );
 
-      // Get prescription ID from transaction receipt (simplified)
-      // In production, you'd parse the transaction receipt for the event
-      // For now, we'll use a placeholder since we need to listen to events
-      const newPrescriptionId = 'pending'; // Parse from event logs in production
+      console.log('[CreatePrescription] Prescription created with ID:', prescriptionIdBigInt.toString());
 
       // 6. Generate QR code
       const qrPayload: PrescriptionQRData = {
-        prescriptionId: newPrescriptionId,
+        prescriptionId: prescriptionIdBigInt.toString(),
         patientDataHash: patientHash,
         prescriptionDataHash: prescriptionHash,
         patientSecret,
@@ -108,7 +105,7 @@ export default function CreatePrescription() {
 
       const qrString = encodePrescriptionQR(qrPayload);
       setQrData(qrString);
-      setPrescriptionId(newPrescriptionId);
+      setPrescriptionId(prescriptionIdBigInt.toString());
       setStep('qr');
     } catch (err: any) {
       console.error('Error creating prescription:', err);
