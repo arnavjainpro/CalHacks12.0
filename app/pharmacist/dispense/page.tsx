@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { WalletStatus } from '@/components/WalletStatus';
 import { useMyCredential } from '@/lib/hooks/useCredential';
-import { useDispensePrescription } from '@/lib/hooks/usePrescription';
+import { useDispensePrescription, useVerifyPrescription } from '@/lib/hooks/usePrescription';
 import { CredentialType, PrescriptionStatus } from '@/lib/contracts/config';
 import { decodePrescriptionQR } from '@/lib/utils/qr';
 import { fetchFromIPFS, PrescriptionMetadata } from '@/lib/utils/ipfs';
@@ -20,69 +20,98 @@ export default function DispensePrescription() {
   const [step, setStep] = useState<'scan' | 'verify' | 'dispense' | 'success'>('scan');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [qrData, setQrData] = useState<any>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [prescriptionData, setPrescriptionData] = useState<any>(null);
   const [metadata, setMetadata] = useState<PrescriptionMetadata | null>(null);
   const [error, setError] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [inputMode, setInputMode] = useState<'qr' | 'json'>('qr');
+  const [jsonInput, setJsonInput] = useState('');
+
+  // Verify prescription using the smart contract
+  const prescriptionIdBigInt = qrData?.prescriptionId
+    ? (typeof qrData.prescriptionId === 'bigint'
+        ? qrData.prescriptionId
+        : typeof qrData.prescriptionId === 'number' || !isNaN(Number(qrData.prescriptionId))
+          ? BigInt(qrData.prescriptionId)
+          : undefined)
+    : undefined;
+
+  const {
+    prescription: prescriptionData,
+    isLoading: isVerifying
+  } = useVerifyPrescription(
+    prescriptionIdBigInt,
+    qrData?.patientDataHash,
+    qrData?.prescriptionDataHash
+  );
 
   const isPharmacist = credential?.credentialType === CredentialType.Pharmacist;
 
   const handleScan = async (result: string) => {
     try {
       setError('');
-      setIsProcessing(true);
 
-      // Decode QR code
+      // Decode QR code and set to state
+      // This will trigger the useVerifyPrescription hook
       const decoded = decodePrescriptionQR(result);
       setQrData(decoded);
-
-      // Fetch prescription from blockchain
-      const response = await fetch('/api/verify-prescription', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prescriptionId: decoded.prescriptionId,
-          patientDataHash: decoded.patientDataHash,
-          prescriptionDataHash: decoded.prescriptionDataHash,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to verify prescription');
-      }
-
-      const prescription = await response.json();
-      setPrescriptionData(prescription);
-
-      // Fetch metadata from IPFS
-      const ipfsData = await fetchFromIPFS<PrescriptionMetadata>(prescription.ipfsCid);
-
-      // Decrypt patient data
-      const encryptionKey = deriveEncryptionKey(decoded.patientSecret as `0x${string}`);
-      const decryptedMetadata = {
-        ...ipfsData,
-        patientName: decryptData(ipfsData.patientName, encryptionKey),
-        patientDOB: decryptData(ipfsData.patientDOB, encryptionKey),
-        patientID: decryptData(ipfsData.patientID, encryptionKey),
-      };
-
-      setMetadata(decryptedMetadata);
-      setStep('verify');
     } catch (err) {
       console.error('Error scanning QR code:', err);
-      setError((err as Error).message || 'Failed to scan QR code');
-    } finally {
-      setIsProcessing(false);
+      setError((err as Error).message || 'Failed to decode QR code');
     }
   };
+
+  const handleJsonSubmit = () => {
+    try {
+      setError('');
+      const parsed = JSON.parse(jsonInput);
+
+      // Validate the parsed JSON has required fields
+      if (!parsed.prescriptionId || !parsed.patientDataHash || !parsed.prescriptionDataHash || !parsed.patientSecret) {
+        throw new Error('Invalid JSON: Missing required fields (prescriptionId, patientDataHash, prescriptionDataHash, patientSecret)');
+      }
+
+      setQrData(parsed);
+    } catch (err) {
+      console.error('Error parsing JSON:', err);
+      setError((err as Error).message || 'Failed to parse JSON');
+    }
+  };
+
+  // When prescription is verified, fetch and decrypt metadata from IPFS
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      if (!prescriptionData || !qrData) return;
+
+      try {
+        setError('');
+
+        // Fetch metadata from IPFS
+        const ipfsData = await fetchFromIPFS<PrescriptionMetadata>(prescriptionData.ipfsCid);
+
+        // Decrypt patient data
+        const encryptionKey = deriveEncryptionKey(qrData.patientSecret as `0x${string}`);
+        const decryptedMetadata = {
+          ...ipfsData,
+          patientName: decryptData(ipfsData.patientName, encryptionKey),
+          patientDOB: decryptData(ipfsData.patientDOB, encryptionKey),
+          patientID: decryptData(ipfsData.patientID, encryptionKey),
+        };
+
+        setMetadata(decryptedMetadata);
+        setStep('verify');
+      } catch (err) {
+        console.error('Error fetching metadata:', err);
+        setError((err as Error).message || 'Failed to fetch prescription details');
+      }
+    };
+
+    fetchMetadata();
+  }, [prescriptionData, qrData]);
 
   const handleDispense = async () => {
     if (!qrData) return;
 
     try {
       setError('');
-      setIsProcessing(true);
 
       await dispensePrescription(
         BigInt(qrData.prescriptionId),
@@ -94,8 +123,6 @@ export default function DispensePrescription() {
     } catch (err) {
       console.error('Error dispensing prescription:', err);
       setError((err as Error).message || 'Failed to dispense prescription');
-    } finally {
-      setIsProcessing(false);
     }
   };
 
@@ -171,8 +198,9 @@ export default function DispensePrescription() {
                   onClick={() => {
                     setStep('scan');
                     setQrData(null);
-                    setPrescriptionData(null);
                     setMetadata(null);
+                    setJsonInput('');
+                    setError('');
                   }}
                   className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
                 >
@@ -309,10 +337,10 @@ export default function DispensePrescription() {
               <div className="mt-8">
                 <button
                   onClick={handleDispense}
-                  disabled={!canDispense || isProcessing || isPending}
+                  disabled={!canDispense || isPending}
                   className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {isProcessing || isPending ? 'Dispensing...' : 'Confirm & Dispense'}
+                  {isPending ? 'Dispensing...' : 'Confirm & Dispense'}
                 </button>
               </div>
             </div>
@@ -345,29 +373,74 @@ export default function DispensePrescription() {
 
           <div className="bg-white rounded-lg shadow-lg p-8">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">QR Code Scanner</h2>
+              <h2 className="text-xl font-semibold mb-4">Scan Prescription</h2>
+
+              {/* Toggle between QR and JSON input */}
+              <div className="flex gap-2 mb-4">
+                <button
+                  onClick={() => setInputMode('qr')}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                    inputMode === 'qr'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  📷 QR Scanner
+                </button>
+                <button
+                  onClick={() => setInputMode('json')}
+                  className={`px-4 py-2 rounded-lg font-medium transition ${
+                    inputMode === 'json'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  }`}
+                >
+                  📋 Paste JSON
+                </button>
+              </div>
+
               <p className="text-sm text-gray-600">
-                Position the QR code within the camera frame
+                {inputMode === 'qr'
+                  ? 'Position the QR code within the camera frame'
+                  : 'Paste the prescription JSON data below'}
               </p>
             </div>
 
-            <div className="aspect-square max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden">
-              <Scanner
-                onScan={(result) => {
-                  if (result && result.length > 0) {
-                    handleScan(result[0].rawValue);
-                  }
-                }}
-                onError={(error) => {
-                  console.error('Scanner error:', error);
-                  setError('Camera access denied or not available');
-                }}
-                formats={['qr_code']}
-                constraints={{
-                  facingMode: 'environment',
-                }}
-              />
-            </div>
+            {inputMode === 'qr' ? (
+              <div className="aspect-square max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden">
+                <Scanner
+                  onScan={(result) => {
+                    if (result && result.length > 0) {
+                      handleScan(result[0].rawValue);
+                    }
+                  }}
+                  onError={(error) => {
+                    console.error('Scanner error:', error);
+                    setError('Camera access denied or not available');
+                  }}
+                  formats={['qr_code']}
+                  constraints={{
+                    facingMode: 'environment',
+                  }}
+                />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <textarea
+                  value={jsonInput}
+                  onChange={(e) => setJsonInput(e.target.value)}
+                  placeholder='{"prescriptionId":"1","patientDataHash":"0x...","prescriptionDataHash":"0x...","patientSecret":"0x..."}'
+                  className="w-full h-48 p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                />
+                <button
+                  onClick={handleJsonSubmit}
+                  disabled={!jsonInput.trim()}
+                  className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  Verify Prescription
+                </button>
+              </div>
+            )}
 
             {error && (
               <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
@@ -375,9 +448,9 @@ export default function DispensePrescription() {
               </div>
             )}
 
-            {isProcessing && (
+            {isVerifying && (
               <div className="mt-6 text-center">
-                <p className="text-gray-600">Processing prescription...</p>
+                <p className="text-gray-600">Verifying prescription on blockchain...</p>
               </div>
             )}
           </div>
