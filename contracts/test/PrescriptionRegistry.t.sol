@@ -266,28 +266,90 @@ contract PrescriptionRegistryTest is Test {
         assertFalse(registry.isPrescriptionDispensable(rxId), "Should not be dispensable after filling");
     }
 
-    function test_GetDoctorPrescriptions() external {
+    function test_DoctorCanViewOwnPrescriptions() external {
+        vm.startPrank(doctor);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx2", 30);
+
+        // Doctor can view their own prescriptions
+        uint256[] memory rxIds = registry.getMyPrescriptions();
+        assertEq(rxIds.length, 2, "Doctor should have 2 prescriptions");
+        assertEq(rxIds[0], 1);
+        assertEq(rxIds[1], 2);
+        vm.stopPrank();
+    }
+
+    function test_PharmacistCanViewOwnDispensals() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+
+        vm.startPrank(pharmacist);
+        registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
+
+        // Pharmacist can view their own dispensals
+        uint256[] memory rxIds = registry.getMyDispensals();
+        assertEq(rxIds.length, 1, "Pharmacist should have 1 dispensal");
+        assertEq(rxIds[0], 1);
+        vm.stopPrank();
+    }
+
+    function test_AdminCanAccessAuditTrails() external {
+        // Owner is admin by default
         vm.startPrank(doctor);
         registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
         registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx2", 30);
         vm.stopPrank();
 
-        uint256[] memory rxIds = registry.getDoctorPrescriptions(doctorTokenId);
-        assertEq(rxIds.length, 2, "Doctor should have 2 prescriptions");
-        assertEq(rxIds[0], 1);
-        assertEq(rxIds[1], 2);
-    }
-
-    function test_GetPharmacistDispensals() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx3", 30);
 
         vm.prank(pharmacist);
         registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
 
-        uint256[] memory rxIds = registry.getPharmacistDispensals(pharmacistTokenId);
-        assertEq(rxIds.length, 1, "Pharmacist should have 1 dispensal");
-        assertEq(rxIds[0], 1);
+        // Admin (owner) can access all audit trails
+        uint256[] memory doctorRxIds = registry.getDoctorPrescriptions(doctorTokenId);
+        assertEq(doctorRxIds.length, 3, "Should see all doctor prescriptions");
+
+        uint256[] memory pharmRxIds = registry.getPharmacistDispensals(pharmacistTokenId);
+        assertEq(pharmRxIds.length, 1, "Should see all pharmacist dispensals");
+    }
+
+    function test_RevertWhen_NonAdminAccessesAuditTrails() external {
+        vm.prank(doctor);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+
+        // Non-admin cannot access other provider's audit trails
+        vm.prank(pharmacist);
+        vm.expectRevert("Only admin can call this function");
+        registry.getDoctorPrescriptions(doctorTokenId);
+
+        vm.prank(doctor);
+        vm.expectRevert("Only admin can call this function");
+        registry.getPharmacistDispensals(pharmacistTokenId);
+    }
+
+    function test_SetAdmin() external {
+        address newAdmin = makeAddr("newAdmin");
+
+        // Owner (current admin) can set new admin
+        registry.setAdmin(newAdmin);
+        assertEq(registry.admin(), newAdmin);
+
+        // New admin can now access audit trails
+        vm.prank(doctor);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+
+        vm.prank(newAdmin);
+        uint256[] memory rxIds = registry.getDoctorPrescriptions(doctorTokenId);
+        assertEq(rxIds.length, 1);
+    }
+
+    function test_RevertWhen_NonAdminSetsAdmin() external {
+        address newAdmin = makeAddr("newAdmin");
+
+        vm.prank(doctor);
+        vm.expectRevert("Only admin can call this function");
+        registry.setAdmin(newAdmin);
     }
 
     // ============ Fuzz Tests ============

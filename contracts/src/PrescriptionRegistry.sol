@@ -35,15 +35,16 @@ contract PrescriptionRegistry {
     }
     
     // ============ State Variables ============
-    
+
     MedicalCredentialSBT public immutable credentialSBT;
-    
+    address public admin;  // For regulatory/compliance access
+
     mapping(uint256 => Prescription) public prescriptions;
     uint256 private _prescriptionIdCounter;
-    
-    // Audit trail mappings
-    mapping(uint256 => uint256[]) public doctorPrescriptions;      // doctorTokenId => prescriptionIds[]
-    mapping(uint256 => uint256[]) public pharmacistDispensals;     // pharmacistTokenId => prescriptionIds[]
+
+    // Audit trail mappings (internal for privacy)
+    mapping(uint256 => uint256[]) internal doctorPrescriptions;      // doctorTokenId => prescriptionIds[]
+    mapping(uint256 => uint256[]) internal pharmacistDispensals;     // pharmacistTokenId => prescriptionIds[]
     
     // ============ Events ============
     
@@ -77,12 +78,25 @@ contract PrescriptionRegistry {
         uint256 indexed prescriptionId,
         uint256 expiredAt
     );
-    
+
+    event AdminChanged(
+        address indexed previousAdmin,
+        address indexed newAdmin
+    );
+
+    // ============ Modifiers ============
+
+    modifier onlyAdmin() {
+        require(msg.sender == admin, "Only admin can call this function");
+        _;
+    }
+
     // ============ Constructor ============
-    
+
     constructor(address _credentialSBT) {
         require(_credentialSBT != address(0), "Invalid SBT address");
         credentialSBT = MedicalCredentialSBT(_credentialSBT);
+        admin = msg.sender;  // Deployer is initial admin
     }
     
     // ============ External Functions ============
@@ -102,11 +116,11 @@ contract PrescriptionRegistry {
         uint256 validityDays
     ) external returns (uint256) {
         // Verify caller is a doctor with valid credential
-        uint256 doctorTokenId = credentialSBT.holderToTokenId(msg.sender);
+        uint256 doctorTokenId = credentialSBT.getHolderTokenId(msg.sender);
         require(doctorTokenId != 0, "No credential found");
         require(
             credentialSBT.hasValidCredential(
-                msg.sender, 
+                msg.sender,
                 MedicalCredentialSBT.CredentialType.Doctor
             ),
             "Invalid or expired doctor credential"
@@ -163,7 +177,7 @@ contract PrescriptionRegistry {
         bytes32 providedPrescriptionHash
     ) external {
         // Verify caller is a pharmacist with valid credential
-        uint256 pharmacistTokenId = credentialSBT.holderToTokenId(msg.sender);
+        uint256 pharmacistTokenId = credentialSBT.getHolderTokenId(msg.sender);
         require(pharmacistTokenId != 0, "No credential found");
         require(
             credentialSBT.hasValidCredential(
@@ -215,9 +229,9 @@ contract PrescriptionRegistry {
         string calldata reason
     ) external {
         Prescription storage rx = prescriptions[prescriptionId];
-        
+
         // Verify caller is the doctor who issued it
-        uint256 doctorTokenId = credentialSBT.holderToTokenId(msg.sender);
+        uint256 doctorTokenId = credentialSBT.getHolderTokenId(msg.sender);
         require(rx.doctorTokenId == doctorTokenId, "Not the issuing doctor");
         require(rx.status == PrescriptionStatus.Active, "Cannot cancel - already processed");
         require(bytes(reason).length > 0, "Cancellation reason required");
@@ -307,29 +321,76 @@ contract PrescriptionRegistry {
     }
     
     /**
-     * @dev Get all prescriptions issued by a doctor (for auditing)
+     * @dev Get caller's own prescriptions (for doctors)
+     * @return uint256[] Array of prescription IDs issued by the caller
+     */
+    function getMyPrescriptions() external view returns (uint256[] memory) {
+        uint256 doctorTokenId = credentialSBT.getHolderTokenId(msg.sender);
+        require(doctorTokenId != 0, "No credential found");
+        require(
+            credentialSBT.hasValidCredential(
+                msg.sender,
+                MedicalCredentialSBT.CredentialType.Doctor
+            ),
+            "Must be a doctor"
+        );
+        return doctorPrescriptions[doctorTokenId];
+    }
+
+    /**
+     * @dev Get caller's own dispensals (for pharmacists)
+     * @return uint256[] Array of prescription IDs dispensed by the caller
+     */
+    function getMyDispensals() external view returns (uint256[] memory) {
+        uint256 pharmacistTokenId = credentialSBT.getHolderTokenId(msg.sender);
+        require(pharmacistTokenId != 0, "No credential found");
+        require(
+            credentialSBT.hasValidCredential(
+                msg.sender,
+                MedicalCredentialSBT.CredentialType.Pharmacist
+            ),
+            "Must be a pharmacist"
+        );
+        return pharmacistDispensals[pharmacistTokenId];
+    }
+
+    /**
+     * @dev Get all prescriptions issued by a doctor (admin-only for auditing)
      * @param doctorTokenId The doctor's SBT token ID
      * @return uint256[] Array of prescription IDs
      */
     function getDoctorPrescriptions(uint256 doctorTokenId)
         external
         view
+        onlyAdmin
         returns (uint256[] memory)
     {
         return doctorPrescriptions[doctorTokenId];
     }
-    
+
     /**
-     * @dev Get all prescriptions dispensed by a pharmacist (for auditing)
+     * @dev Get all prescriptions dispensed by a pharmacist (admin-only for auditing)
      * @param pharmacistTokenId The pharmacist's SBT token ID
      * @return uint256[] Array of prescription IDs
      */
     function getPharmacistDispensals(uint256 pharmacistTokenId)
         external
         view
+        onlyAdmin
         returns (uint256[] memory)
     {
         return pharmacistDispensals[pharmacistTokenId];
+    }
+
+    /**
+     * @dev Set new admin address (admin-only)
+     * @param newAdmin The new admin address
+     */
+    function setAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != address(0), "Invalid admin address");
+        address previousAdmin = admin;
+        admin = newAdmin;
+        emit AdminChanged(previousAdmin, newAdmin);
     }
     
     /**

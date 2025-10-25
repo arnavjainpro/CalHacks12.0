@@ -61,7 +61,7 @@ contract MedicalCredentialSBTTest is Test {
 
         assertEq(tokenId, 1, "Token ID should be 1");
         assertEq(sbt.ownerOf(tokenId), doctor, "Doctor should own the token");
-        assertEq(sbt.holderToTokenId(doctor), tokenId, "Mapping should be updated");
+        assertEq(sbt.getTokenIdByHolder(doctor), tokenId, "Mapping should be updated");
     }
 
     function test_RevertWhen_IssuingToZeroAddress() external {
@@ -266,5 +266,110 @@ contract MedicalCredentialSBTTest is Test {
 
         bool shouldBeValid = timeWarp < (validityYears * 365 days);
         assertEq(sbt.isCredentialValid(tokenId), shouldBeValid);
+    }
+
+    // ============ Access Control Tests ============
+
+    function test_GetMyCredential() external {
+        uint256 tokenId = sbt.issueCredential(
+            doctor,
+            MedicalCredentialSBT.CredentialType.Doctor,
+            "hash123",
+            "Cardiology",
+            "QmTest123",
+            3
+        );
+
+        // Doctor can view their own credential
+        vm.prank(doctor);
+        MedicalCredentialSBT.Credential memory cred = sbt.getMyCredential();
+
+        assertEq(uint256(cred.credentialType), uint256(MedicalCredentialSBT.CredentialType.Doctor));
+        assertEq(cred.licenseHash, "hash123");
+        assertEq(cred.specialty, "Cardiology");
+        assertEq(cred.metadataURI, "QmTest123");
+        assertEq(cred.holder, doctor);
+        assertTrue(cred.isActive);
+    }
+
+    function test_RevertWhen_GetMyCredentialWithoutCredential() external {
+        vm.prank(pharmacist); // No credential issued yet
+        vm.expectRevert("No credential found for caller");
+        sbt.getMyCredential();
+    }
+
+    function test_GetMyTokenId() external {
+        uint256 tokenId = sbt.issueCredential(
+            doctor,
+            MedicalCredentialSBT.CredentialType.Doctor,
+            "hash123",
+            "Cardiology",
+            "QmTest123",
+            3
+        );
+
+        vm.prank(doctor);
+        uint256 retrievedTokenId = sbt.getMyTokenId();
+        assertEq(retrievedTokenId, tokenId);
+    }
+
+    function test_AdminCanAccessCredentials() external {
+        uint256 tokenId = sbt.issueCredential(
+            doctor,
+            MedicalCredentialSBT.CredentialType.Doctor,
+            "hash123",
+            "Cardiology",
+            "QmTest123",
+            3
+        );
+
+        // Owner (admin) can access any credential
+        MedicalCredentialSBT.Credential memory cred = sbt.getCredentialByTokenId(tokenId);
+        assertEq(cred.holder, doctor);
+
+        // Owner can also look up token by holder
+        uint256 retrievedTokenId = sbt.getTokenIdByHolder(doctor);
+        assertEq(retrievedTokenId, tokenId);
+    }
+
+    function test_RevertWhen_NonAdminAccessesPrivateData() external {
+        uint256 tokenId = sbt.issueCredential(
+            doctor,
+            MedicalCredentialSBT.CredentialType.Doctor,
+            "hash123",
+            "Cardiology",
+            "QmTest123",
+            3
+        );
+
+        // Non-owner cannot access credential by token ID
+        vm.prank(pharmacist);
+        vm.expectRevert();
+        sbt.getCredentialByTokenId(tokenId);
+
+        // Non-owner cannot look up token by holder
+        vm.prank(pharmacist);
+        vm.expectRevert();
+        sbt.getTokenIdByHolder(doctor);
+    }
+
+    function test_PublicFunctionsStillWork() external {
+        uint256 tokenId = sbt.issueCredential(
+            doctor,
+            MedicalCredentialSBT.CredentialType.Doctor,
+            "hash123",
+            "Cardiology",
+            "QmTest123",
+            3
+        );
+
+        // Anyone can check if a credential is valid (needed for prescription verification)
+        assertTrue(sbt.isCredentialValid(tokenId));
+
+        // Anyone can check if an address has a valid credential type
+        assertTrue(sbt.hasValidCredential(doctor, MedicalCredentialSBT.CredentialType.Doctor));
+
+        // Anyone can get holder token ID via public function
+        assertEq(sbt.getHolderTokenId(doctor), tokenId);
     }
 }

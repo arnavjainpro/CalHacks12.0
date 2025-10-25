@@ -29,9 +29,9 @@ contract MedicalCredentialSBT is ERC721, Ownable {
     }
     
     // ============ State Variables ============
-    
-    mapping(uint256 => Credential) public credentials;
-    mapping(address => uint256) public holderToTokenId;  // 1 credential per address
+
+    mapping(uint256 => Credential) internal credentials;
+    mapping(address => uint256) internal holderToTokenId;  // 1 credential per address
     uint256 private _tokenIdCounter;
     
     // ============ Events ============
@@ -194,16 +194,25 @@ contract MedicalCredentialSBT is ERC721, Ownable {
      * @param credType The credential type to verify
      * @return bool True if holder has valid credential of specified type
      */
-    function hasValidCredential(address holder, CredentialType credType) 
-        external 
-        view 
-        returns (bool) 
+    function hasValidCredential(address holder, CredentialType credType)
+        external
+        view
+        returns (bool)
     {
         uint256 tokenId = holderToTokenId[holder];
         if (tokenId == 0) return false;
-        
+
         Credential memory cred = credentials[tokenId];
         return cred.credentialType == credType && isCredentialValid(tokenId);
+    }
+
+    /**
+     * @dev Get token ID for a holder address (public for PrescriptionRegistry usage)
+     * @param holder The wallet address to look up
+     * @return uint256 The token ID of the holder's credential (0 if none)
+     */
+    function getHolderTokenId(address holder) external view returns (uint256) {
+        return holderToTokenId[holder];
     }
     
     /**
@@ -242,7 +251,56 @@ contract MedicalCredentialSBT is ERC721, Ownable {
     function totalSupply() external view returns (uint256) {
         return _tokenIdCounter;
     }
-    
+
+    /**
+     * @dev Get caller's own credential details
+     * @return Credential struct with all details for the caller
+     */
+    function getMyCredential() external view returns (Credential memory) {
+        uint256 tokenId = holderToTokenId[msg.sender];
+        require(tokenId != 0, "No credential found for caller");
+        return credentials[tokenId];
+    }
+
+    /**
+     * @dev Get caller's own token ID
+     * @return uint256 The token ID of the caller's credential
+     */
+    function getMyTokenId() external view returns (uint256) {
+        uint256 tokenId = holderToTokenId[msg.sender];
+        require(tokenId != 0, "No credential found for caller");
+        return tokenId;
+    }
+
+    /**
+     * @dev Get credential by token ID (admin-only for regulatory access)
+     * @param tokenId The credential token ID
+     * @return Credential struct with all details
+     */
+    function getCredentialByTokenId(uint256 tokenId)
+        external
+        view
+        onlyOwner
+        returns (Credential memory)
+    {
+        require(_ownerOf(tokenId) != address(0), "Token does not exist");
+        return credentials[tokenId];
+    }
+
+    /**
+     * @dev Get token ID by holder address (admin-only for regulatory access)
+     * @param holder The wallet address to look up
+     * @return uint256 The token ID of the holder's credential
+     */
+    function getTokenIdByHolder(address holder)
+        external
+        view
+        onlyOwner
+        returns (uint256)
+    {
+        return holderToTokenId[holder];
+    }
+
     // ============ Internal Functions ============
     
     /**
