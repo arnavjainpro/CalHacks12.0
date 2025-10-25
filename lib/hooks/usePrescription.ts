@@ -79,6 +79,7 @@ export function useMyPrescriptions() {
     address: CONTRACTS.PrescriptionRegistry.address,
     abi: CONTRACTS.PrescriptionRegistry.abi,
     functionName: 'getMyPrescriptions',
+    account: address,
     query: {
       enabled: !!address,
     },
@@ -112,6 +113,7 @@ export function useMyDispensals() {
     address: CONTRACTS.PrescriptionRegistry.address,
     abi: CONTRACTS.PrescriptionRegistry.abi,
     functionName: 'getMyDispensals',
+    account: address,
     query: {
       enabled: !!address,
     },
@@ -136,6 +138,7 @@ export function usePrescriptionAsDoctor(prescriptionId?: bigint) {
     abi: CONTRACTS.PrescriptionRegistry.abi,
     functionName: 'getPrescriptionAsDoctor',
     args: [prescriptionId!],
+    account: address,
     query: {
       enabled: !!address && !!prescriptionId && prescriptionId > 0n,
     },
@@ -356,6 +359,7 @@ export function usePatientPrescriptionHistory(patientDataHash?: `0x${string}`) {
     abi: CONTRACTS.PrescriptionRegistry.abi,
     functionName: 'getPatientPrescriptionHistory',
     args: [patientDataHash!],
+    account: address,
     query: {
       enabled: !!address && !!patientDataHash && patientDataHash !== '0x',
     },
