@@ -72,6 +72,7 @@ contract PrescriptionRegistry {
     // Audit trail mappings (internal for privacy)
     mapping(uint256 => uint256[]) internal doctorPrescriptions;      // doctorTokenId => prescriptionIds[]
     mapping(uint256 => uint256[]) internal pharmacistDispensals;     // pharmacistTokenId => prescriptionIds[]
+    mapping(bytes32 => uint256[]) internal patientPrescriptions;     // patientDataHash => prescriptionIds[]
     
     // ============ Events ============
     
@@ -129,6 +130,13 @@ contract PrescriptionRegistry {
 
     event SignerRemoved(
         address indexed signer
+    );
+
+    event PatientHistoryAccessed(
+        bytes32 indexed patientDataHash,
+        address indexed accessor,
+        uint256 indexed accessorTokenId,
+        uint256 accessedAt
     );
 
     // ============ Modifiers ============
@@ -218,7 +226,8 @@ contract PrescriptionRegistry {
         });
         
         doctorPrescriptions[doctorTokenId].push(newPrescriptionId);
-        
+        patientPrescriptions[patientDataHash].push(newPrescriptionId);
+
         emit PrescriptionCreated(
             newPrescriptionId,
             doctorTokenId,
@@ -469,6 +478,46 @@ contract PrescriptionRegistry {
             "Must be a pharmacist"
         );
         return pharmacistDispensals[pharmacistTokenId];
+    }
+
+    /**
+     * @dev Get all prescriptions for a patient by their data hash (doctors and pharmacists only)
+     * @notice This function is for detecting prescription abuse patterns
+     * @param patientDataHash SHA-256 hash of patient identifying info (name, DOB, ID)
+     * @return uint256[] Array of prescription IDs for the patient
+     */
+    function getPatientPrescriptionHistory(bytes32 patientDataHash)
+        external
+        returns (uint256[] memory)
+    {
+        // Get caller's credential
+        uint256 callerTokenId = credentialSBT.getHolderTokenId(msg.sender);
+        require(callerTokenId != 0, "No credential found");
+
+        // Verify caller is either a doctor or pharmacist with valid credentials
+        bool isDoctor = credentialSBT.hasValidCredential(
+            msg.sender,
+            MedicalCredentialSBT.CredentialType.Doctor
+        );
+        bool isPharmacist = credentialSBT.hasValidCredential(
+            msg.sender,
+            MedicalCredentialSBT.CredentialType.Pharmacist
+        );
+
+        require(
+            isDoctor || isPharmacist,
+            "Must be a valid doctor or pharmacist"
+        );
+
+        // Emit audit event for compliance tracking
+        emit PatientHistoryAccessed(
+            patientDataHash,
+            msg.sender,
+            callerTokenId,
+            block.timestamp
+        );
+
+        return patientPrescriptions[patientDataHash];
     }
 
     // ============ Multi-Sig Governance Functions ============

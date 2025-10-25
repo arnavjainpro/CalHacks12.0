@@ -13,8 +13,8 @@ import { fetchFromIPFS, PrescriptionMetadata } from '@/lib/utils/ipfs';
 import { deriveEncryptionKey, decryptData } from '@/lib/utils/crypto';
 
 export default function DispensePrescription() {
-  const { isConnected } = useAccount();
-  const { credential } = useMyCredential();
+  const { address, isConnected } = useAccount();
+  const { credential, isLoading: isLoadingCredential } = useMyCredential();
   const { dispensePrescription, isPending } = useDispensePrescription();
 
   const [step, setStep] = useState<'scan' | 'verify' | 'dispense' | 'success'>('scan');
@@ -99,6 +99,29 @@ export default function DispensePrescription() {
     }
   };
 
+  // Show loading state while checking credential
+  if (isConnected && isLoadingCredential) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <header className="border-b bg-white">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <WalletStatus />
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="animate-pulse">
+              <div className="text-4xl mb-4">🔍</div>
+              <h2 className="text-2xl font-bold mb-2">Checking Credentials...</h2>
+              <p className="text-gray-600">Please wait while we verify your access.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (!isConnected || !isPharmacist) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -111,7 +134,15 @@ export default function DispensePrescription() {
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4 text-red-600">Access Denied</h2>
-            <p className="text-gray-600">You need a valid Pharmacist credential to dispense prescriptions.</p>
+            <p className="text-gray-600 mb-4">You need a valid Pharmacist credential to dispense prescriptions.</p>
+            {!isConnected && (
+              <p className="text-sm text-gray-500">Please connect your wallet above.</p>
+            )}
+            {isConnected && !isPharmacist && (
+              <p className="text-sm text-gray-500">
+                Your connected wallet ({address?.slice(0, 6)}...{address?.slice(-4)}) does not have a Pharmacist credential.
+              </p>
+            )}
           </div>
         </main>
       </div>

@@ -22,7 +22,7 @@ import { encodePrescriptionQR } from '@/lib/utils/qr';
 export default function CreatePrescription() {
   const router = useRouter();
   const { address, isConnected } = useAccount();
-  const { credential } = useMyCredential();
+  const { credential, isLoading: isLoadingCredential } = useMyCredential();
   const { createPrescription, isPending } = useCreatePrescription();
 
   const [step, setStep] = useState<'form' | 'qr'>('form');
@@ -144,6 +144,29 @@ export default function CreatePrescription() {
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   };
 
+  // Show loading state while checking credential
+  if (isConnected && isLoadingCredential) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <header className="border-b bg-white">
+          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <WalletStatus />
+          </div>
+        </header>
+        <main className="container mx-auto px-4 py-16">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="animate-pulse">
+              <div className="text-4xl mb-4">🔍</div>
+              <h2 className="text-2xl font-bold mb-2">Checking Credentials...</h2>
+              <p className="text-gray-600">Please wait while we verify your access.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (!isConnected || !isDoctor) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
@@ -156,7 +179,15 @@ export default function CreatePrescription() {
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4 text-red-600">Access Denied</h2>
-            <p className="text-gray-600">You need a valid Doctor credential to create prescriptions.</p>
+            <p className="text-gray-600 mb-4">You need a valid Doctor credential to create prescriptions.</p>
+            {!isConnected && (
+              <p className="text-sm text-gray-500">Please connect your wallet above.</p>
+            )}
+            {isConnected && !isDoctor && (
+              <p className="text-sm text-gray-500">
+                Your connected wallet ({address?.slice(0, 6)}...{address?.slice(-4)}) does not have a Doctor credential.
+              </p>
+            )}
           </div>
         </main>
       </div>
