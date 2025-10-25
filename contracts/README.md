@@ -219,7 +219,7 @@ After deployment, save your contract addresses:
 
 ## 🔒 Security
 
-- All contracts use Solidity 0.8.20 (built-in overflow protection)
+- All contracts use Solidity 0.8.30 (built-in overflow protection)
 - OpenZeppelin v5.4.0 contracts for battle-tested implementations
 - Soul-bound tokens (non-transferable)
 - Comprehensive test coverage including fuzz tests
@@ -306,7 +306,7 @@ forge install OpenZeppelin/openzeppelin-contracts
 
 **Issue**: `Error: Multiple versions of Solidity`
 
-**Solution**: Ensure all contracts use `pragma solidity ^0.8.20`
+**Solution**: Ensure all contracts use `pragma solidity ^0.8.30`
 
 ### Test Failures
 
