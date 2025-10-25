@@ -189,6 +189,7 @@ export function useVerifyPrescription(
     abi: CONTRACTS.PrescriptionRegistry.abi,
     functionName: 'verifyPrescriptionForDispensing',
     args: [prescriptionId!, patientHash!, prescriptionHash!],
+    account: address,
     query: {
       enabled:
         !!address &&
