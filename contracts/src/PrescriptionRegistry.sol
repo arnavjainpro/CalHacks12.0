@@ -481,7 +481,7 @@ contract PrescriptionRegistry {
     }
 
     /**
-     * @dev Get all prescriptions for a patient by their data hash (doctors and pharmacists only)
+     * @dev Get all prescriptions for a patient by their data hash (doctors only)
      * @notice This function is for detecting prescription abuse patterns
      * @param patientDataHash SHA-256 hash of patient identifying info (name, DOB, ID)
      * @return uint256[] Array of prescription IDs for the patient
@@ -494,19 +494,13 @@ contract PrescriptionRegistry {
         uint256 callerTokenId = credentialSBT.getHolderTokenId(msg.sender);
         require(callerTokenId != 0, "No credential found");
 
-        // Verify caller is either a doctor or pharmacist with valid credentials
-        bool isDoctor = credentialSBT.hasValidCredential(
-            msg.sender,
-            MedicalCredentialSBT.CredentialType.Doctor
-        );
-        bool isPharmacist = credentialSBT.hasValidCredential(
-            msg.sender,
-            MedicalCredentialSBT.CredentialType.Pharmacist
-        );
-
+        // Verify caller is a doctor with valid credentials
         require(
-            isDoctor || isPharmacist,
-            "Must be a valid doctor or pharmacist"
+            credentialSBT.hasValidCredential(
+                msg.sender,
+                MedicalCredentialSBT.CredentialType.Doctor
+            ),
+            "Must be a valid doctor"
         );
 
         // Emit audit event for compliance tracking
