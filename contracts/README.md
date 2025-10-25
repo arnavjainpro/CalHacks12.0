@@ -1,256 +1,337 @@
-# MedChain - Blockchain Prescription Validator
+# MedChain Smart Contracts (Foundry)
 
-A decentralized prescription validation system built on Base L2 that prevents prescription fraud using Soul-Bound Tokens and IPFS-encrypted storage.
-
-## 🎯 Problem Statement
-
-- **Prescription Fraud**: Forged prescriptions cost the healthcare system billions annually
-- **Fragmented Systems**: No single source of truth for prescription authenticity
-- **Manual Verification**: Pharmacists spend 30+ minutes calling doctors to verify prescriptions
-- **Data Breaches**: Centralized e-prescription systems are vulnerable to attacks
-
-## ✨ Solution
-
-MedChain uses blockchain technology to create an immutable, verifiable prescription system where:
-- Doctors issue prescriptions secured by Soul-Bound Token credentials
-- Pharmacists instantly verify prescriptions via QR codes
-- Patient data is encrypted on IPFS (never exposed on-chain)
-- No patient blockchain interaction required (works like traditional prescriptions)
-
-## 🏗️ Architecture
-
-```
-┌──────────────────────────────────────────────────────────┐
-│                    Frontend (Next.js)                    │
-│  - Doctor Dashboard  - Pharmacist Dashboard  - Admin     │
-└──────────────────────────────────────────────────────────┘
-                            ↕
-┌──────────────────────────────────────────────────────────┐
-│              Backend (Next.js API Routes)                │
-│  - KYC Processing  - Encryption  - IPFS Upload           │
-└──────────────────────────────────────────────────────────┘
-                            ↕
-┌───────────────────────┬──────────────────────────────────┐
-│   Blockchain (Base)   │     Storage (IPFS)               │
-│  - MedicalCredentialSBT│  - Encrypted prescriptions      │
-│  - PrescriptionRegistry│  - Doctor/Pharmacist metadata   │
-└───────────────────────┴──────────────────────────────────┘
-```
-
-## 🔑 Key Features
-
-### For Healthcare Providers
-- ✅ **Soul-Bound Credentials**: Non-transferable doctor & pharmacist verification
-- ✅ **Instant Verification**: No phone calls, instant prescription validation
-- ✅ **Audit Trail**: Immutable record of who prescribed and who dispensed
-- ✅ **Fraud Prevention**: Tamper-proof prescriptions with hash verification
-
-### For Patients
-- ✅ **No Wallet Needed**: Patients just receive paper prescriptions with QR codes
-- ✅ **Privacy First**: Patient data encrypted on IPFS, hashes on-chain
-- ✅ **Traditional UX**: Works exactly like current prescription workflow
-
-### For Regulators
-- ✅ **Transparency**: Complete prescription history on-chain
-- ✅ **Revocation**: Credentials can be revoked if fraud detected
-- ✅ **Analytics**: Track prescribing patterns, detect anomalies
+Properly configured Foundry project for the MedChain blockchain prescription validation system.
 
 ## 📦 Project Structure
 
 ```
-CalHacks12.0/
-├── contracts/                  # Smart contracts (Solidity)
-│   ├── contracts/
-│   │   ├── MedicalCredentialSBT.sol
-│   │   └── PrescriptionRegistry.sol
-│   ├── test/                  # 43 passing tests
-│   ├── scripts/               # Deployment scripts
-│   └── README.md
-├── app/                       # Next.js frontend (TBD)
-├── SMART_CONTRACTS_SUMMARY.md
-└── README.md                  # This file
+foundry-contracts/
+├── src/                          # Smart contracts
+│   ├── MedicalCredentialSBT.sol  # Soul-Bound Token for credentials
+│   └── PrescriptionRegistry.sol  # Prescription management
+├── test/                         # Foundry tests (Solidity)
+│   ├── MedicalCredentialSBT.t.sol
+│   └── PrescriptionRegistry.t.sol
+├── script/                       # Deployment scripts
+│   └── Deploy.s.sol
+├── lib/                          # Dependencies (git submodules)
+│   ├── forge-std/               # Foundry standard library
+│   └── openzeppelin-contracts/  # OpenZeppelin contracts
+├── foundry.toml                 # Foundry configuration
+└── .env.example                 # Environment variables template
 ```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 20+
-- pnpm
-- MetaMask or Coinbase Wallet
 
-### Smart Contracts
+- [Foundry](https://book.getfoundry.sh/getting-started/installation)
+- Git
+
+### Installation
 
 ```bash
-# Install dependencies
-cd contracts
-pnpm install
+cd foundry-contracts
+
+# Dependencies are already installed as git submodules
+# But if you need to update them:
+forge install
 
 # Compile contracts
-pnpm compile
+forge build
 
 # Run tests
-pnpm test
+forge test
 
-# Deploy to Base Sepolia testnet
-pnpm deploy:sepolia
+# Run tests with gas reporting
+forge test --gas-report
+
+# Run tests with verbosity (to see console.log output)
+forge test -vvv
 ```
 
-### Environment Setup
+## 🧪 Testing
 
-Create `contracts/.env`:
-```env
-PRIVATE_KEY=your_private_key
-BASE_SEPOLIA_RPC_URL=https://sepolia.base.org
-BASESCAN_API_KEY=your_api_key
+### Run All Tests
+
+```bash
+forge test
 ```
 
-## 🔄 User Workflows
+### Run Specific Test Contract
 
-### 1. Doctor Onboarding
-```
-1. Doctor connects wallet
-2. Submits KYC (medical license, ID)
-3. Admin reviews and approves
-4. Soul-Bound Token (SBT) minted to doctor's wallet
-5. Doctor can now create prescriptions
+```bash
+forge test --match-contract MedicalCredentialSBTTest
+forge test --match-contract PrescriptionRegistryTest
 ```
 
-### 2. Create Prescription
-```
-1. Doctor fills prescription form:
-   - Patient info (name, DOB, ID)
-   - Medication (name, dosage, quantity)
-   - Instructions
-2. Backend encrypts data → uploads to IPFS
-3. Smart contract stores hashes + IPFS CID
-4. QR code generated with decryption key
-5. Doctor prints prescription → gives to patient
+### Run Specific Test
+
+```bash
+forge test --match-test test_IssueCredential
 ```
 
-### 3. Pharmacist Verification
-```
-1. Patient brings paper prescription
-2. Pharmacist scans QR code
-3. System:
-   - Fetches from blockchain (validates not expired/used)
-   - Fetches from IPFS (encrypted data)
-   - Decrypts using key from QR
-   - Verifies hashes match (tamper detection)
-4. Pharmacist sees full prescription details
-5. Pharmacist clicks "Dispense"
-6. Blockchain updated (can't be filled again)
+### Run with Detailed Output
+
+```bash
+forge test -vvvv  # Max verbosity, shows traces
 ```
 
-## 💡 Technical Highlights
+### Generate Coverage Report
 
-### Smart Contracts
-- **Language**: Solidity 0.8.20
-- **Network**: Base L2 (low fees, fast confirmations)
-- **Standards**: ERC-721 (SBTs), OpenZeppelin
-- **Gas Cost**: ~$0.0002 per prescription
+```bash
+forge coverage
+```
 
-### Security
-- SHA-256 hashing for data integrity
-- AES-256 encryption for sensitive data
+### Gas Snapshot
+
+```bash
+forge snapshot
+```
+
+## 📊 Test Results
+
+```
+Ran 2 test suites:
+- MedicalCredentialSBT: 12 tests (including 2 fuzz tests)
+- PrescriptionRegistry: 15 tests (including 2 fuzz tests)
+
+Total: 27 tests - All passing ✅
+```
+
+## 🚢 Deployment
+
+### 1. Set Up Environment Variables
+
+```bash
+cp .env.example .env
+# Edit .env with your values
+```
+
+Required variables:
+- `PRIVATE_KEY` - Deployer wallet private key
+- `BASE_SEPOLIA_RPC_URL` - RPC endpoint (e.g., from Alchemy/Infura)
+- `BASESCAN_API_KEY` - For contract verification
+
+### 2. Deploy to Base Sepolia
+
+```bash
+# Load environment variables
+source .env
+
+# Deploy contracts
+forge script script/Deploy.s.sol \
+  --rpc-url base_sepolia \
+  --broadcast \
+  --verify \
+  -vvvv
+```
+
+### 3. Deploy to Local Testnet (Anvil)
+
+```bash
+# Terminal 1: Start Anvil
+anvil
+
+# Terminal 2: Deploy
+forge script script/Deploy.s.sol \
+  --rpc-url http://localhost:8545 \
+  --broadcast
+```
+
+### 4. Verify Contract on Basescan
+
+If automatic verification fails:
+
+```bash
+forge verify-contract <CONTRACT_ADDRESS> \
+  src/MedicalCredentialSBT.sol:MedicalCredentialSBT \
+  --chain base-sepolia \
+  --etherscan-api-key $BASESCAN_API_KEY
+```
+
+## 🔧 Common Commands
+
+### Compilation
+
+```bash
+forge build                    # Compile all contracts
+forge build --sizes            # Show contract sizes
+forge clean                    # Clean build artifacts
+```
+
+### Testing
+
+```bash
+forge test                     # Run all tests
+forge test -vv                 # With logs
+forge test --gas-report        # With gas usage
+forge test --watch             # Watch mode
+```
+
+### Code Quality
+
+```bash
+forge fmt                      # Format code
+forge lint                     # Lint code for issues
+forge lint --severity high     # Show only high-severity issues
+```
+
+### Documentation
+
+```bash
+forge doc                      # Generate documentation
+forge doc --serve              # Serve docs locally
+```
+
+### Interacting with Contracts
+
+```bash
+# Call a view function
+cast call <CONTRACT_ADDRESS> "totalSupply()(uint256)" --rpc-url base_sepolia
+
+# Send a transaction
+cast send <CONTRACT_ADDRESS> \
+  "issueCredential(address,uint8,string,string,string,uint256)" \
+  <HOLDER_ADDRESS> 0 "hash123" "Cardiology" "QmTest" 3 \
+  --private-key $PRIVATE_KEY \
+  --rpc-url base_sepolia
+
+# Get transaction receipt
+cast receipt <TX_HASH> --rpc-url base_sepolia
+
+# Estimate gas
+cast estimate <CONTRACT_ADDRESS> "functionName(args)" --rpc-url base_sepolia
+```
+
+## 📝 Contract Addresses
+
+After deployment, save your contract addresses:
+
+### Base Sepolia Testnet
+- MedicalCredentialSBT: `<address>`
+- PrescriptionRegistry: `<address>`
+
+### Base Mainnet (Production)
+- MedicalCredentialSBT: `<address>`
+- PrescriptionRegistry: `<address>`
+
+## 🔒 Security
+
+- All contracts use Solidity 0.8.20 (built-in overflow protection)
+- OpenZeppelin v5.4.0 contracts for battle-tested implementations
 - Soul-bound tokens (non-transferable)
-- Role-based access control
+- Comprehensive test coverage including fuzz tests
+- Hash-based data integrity verification
+
+### Run Security Analysis
+
+```bash
+# Install Slither
+pip3 install slither-analyzer
+
+# Run analysis
+slither .
+```
+
+## 🎯 Key Features
+
+### MedicalCredentialSBT.sol
+- ERC-721 based Soul-Bound Tokens
+- Non-transferable credentials
+- Credential expiry and revocation
+- Doctor and Pharmacist credential types
+
+### PrescriptionRegistry.sol
+- Create prescriptions (doctors only)
+- Dispense prescriptions (pharmacists only)
+- Hash-based tamper detection
 - Single-use prescription enforcement
+- Audit trail for all actions
 
-### Privacy
-- Patient data encrypted on IPFS
-- Only hashes stored on-chain
-- Decryption key in QR code (not on blockchain)
-- License numbers hashed
+## 📚 Additional Resources
 
-## 📊 Gas Costs (Base L2)
+- [Foundry Book](https://book.getfoundry.sh/)
+- [Forge Standard Library](https://github.com/foundry-rs/forge-std)
+- [OpenZeppelin Contracts](https://docs.openzeppelin.com/contracts/)
+- [Base Network Docs](https://docs.base.org/)
 
-| Operation | Gas | Cost @ 1 gwei |
-|-----------|-----|---------------|
-| Issue Doctor SBT | 150k | $0.00015 |
-| Create Prescription | 100k | $0.0001 |
-| Dispense Prescription | 80k | $0.00008 |
+## 🧑‍💻 Development Tips
 
-**Total per prescription: < $0.001 USD**
+### Debugging
 
-## 🛡️ Security Features
+```bash
+# Use console.log in tests
+import {console} from "forge-std/Test.sol";
+console.log("Value:", value);
 
-### Fraud Prevention
-| Attack | Prevention |
-|--------|-----------|
-| Forged prescription | Hash verification fails |
-| Tampered data | On-chain hash mismatch |
-| Duplicate filling | Single-use status enforced |
-| Fake doctor | Requires valid SBT |
-| Revoked doctor | SBT validity check |
-
-### Data Protection
-- Encryption at rest (AES-256)
-- Hashes on-chain (tamper detection)
-- IPFS for decentralized storage
-- Key escrow for lost QR codes
-
-## 📈 Hackathon Milestones
-
-### ✅ Completed
-- [x] System architecture design
-- [x] Smart contract implementation
-- [x] Comprehensive test suites (43 tests)
-- [x] Deployment scripts
-- [x] Documentation
-
-### 🚧 In Progress
-- [ ] Next.js frontend
-- [ ] IPFS integration
-- [ ] QR code generation/scanning
-- [ ] Admin dashboard
-
-### 📅 Planned
-- [ ] Deploy to Base Sepolia
-- [ ] End-to-end testing
-- [ ] Demo preparation
-- [ ] Pitch deck
-
-## 🎓 Tech Stack
-
-```
-Frontend:
-  - Next.js 14 (App Router)
-  - RainbowKit + wagmi
-  - Tailwind CSS
-  - QR code libraries
-
-Backend:
-  - Next.js API routes
-  - PostgreSQL (Supabase)
-  - IPFS (Pinata)
-  - Crypto (encryption)
-
-Blockchain:
-  - Base L2 (Ethereum)
-  - Solidity 0.8.20
-  - Hardhat
-  - OpenZeppelin
-
-Storage:
-  - IPFS (hot data)
-  - PostgreSQL (metadata)
-  - Arweave (cold archive)
+# Run with high verbosity to see traces
+forge test -vvvv
 ```
 
-## 🤝 Team
+### Gas Optimization
 
-[Add team members here]
+```bash
+# Generate gas report
+forge test --gas-report
+
+# Create gas snapshot for regression testing
+forge snapshot
+
+# Compare gas usage
+forge snapshot --diff
+```
+
+### Fork Testing
+
+```bash
+# Fork Base mainnet for testing
+forge test --fork-url $BASE_MAINNET_RPC_URL
+
+# Fork at specific block
+forge test --fork-url $BASE_MAINNET_RPC_URL --fork-block-number 12345678
+```
+
+## 🐛 Troubleshooting
+
+### Compilation Errors
+
+**Issue**: `Error: Could not find OpenZeppelin contracts`
+
+**Solution**:
+```bash
+forge install OpenZeppelin/openzeppelin-contracts
+```
+
+**Issue**: `Error: Multiple versions of Solidity`
+
+**Solution**: Ensure all contracts use `pragma solidity ^0.8.20`
+
+### Test Failures
+
+**Issue**: Tests fail with gas issues
+
+**Solution**:
+```bash
+forge test --gas-limit 30000000
+```
+
+**Issue**: Fork tests timing out
+
+**Solution**: Use Alchemy/Infura RPC instead of public endpoints
 
 ## 📄 License
 
 MIT
 
-## 🔗 Links
+## 🤝 Contributing
 
-- [Base Network](https://base.org)
-- [Smart Contract Details](./SMART_CONTRACTS_SUMMARY.md)
-- [Implementation Status](./CONTRACTS_COMPLETE.md)
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `forge test`
+5. Submit a pull request
 
 ---
 
-**Built for CalHacks 12.0 🚀**
+**Built with Foundry for CalHacks 12.0 🚀**

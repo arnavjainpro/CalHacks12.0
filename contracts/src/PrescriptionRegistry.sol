@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./MedicalCredentialSBT.sol";
+import {MedicalCredentialSBT} from "./MedicalCredentialSBT.sol";
 
 /**
  * @title PrescriptionRegistry
