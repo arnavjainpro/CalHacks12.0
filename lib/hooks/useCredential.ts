@@ -9,17 +9,31 @@ import { useEffect } from 'react';
 export function useMyCredential() {
   const { address } = useAccount();
 
-  const { data: credential, isLoading, error, refetch } = useReadContract({
+  // First, try to get the token ID for this address
+  const { data: tokenId } = useReadContract({
     address: CONTRACTS.MedicalCredentialSBT.address,
     abi: CONTRACTS.MedicalCredentialSBT.abi,
-    functionName: 'getMyCredential',
+    functionName: 'getHolderTokenId',
+    args: [address!],
     query: {
       enabled: !!address,
     },
   });
 
+  // Then get the credential using the token ID
+  const { data: credential, isLoading, error, refetch } = useReadContract({
+    address: CONTRACTS.MedicalCredentialSBT.address,
+    abi: CONTRACTS.MedicalCredentialSBT.abi,
+    functionName: 'getCredential',
+    args: [tokenId!],
+    query: {
+      enabled: !!address && !!tokenId && tokenId > 0n,
+    },
+  });
+
   useEffect(() => {
     console.log('[useMyCredential] Address:', address);
+    console.log('[useMyCredential] Token ID from mapping:', tokenId?.toString());
     console.log('[useMyCredential] Loading:', isLoading);
     console.log('[useMyCredential] Error:', error);
     console.log('[useMyCredential] Credential:', credential);
@@ -30,7 +44,7 @@ export function useMyCredential() {
       console.log('[useMyCredential] Expires At:', new Date(Number(cred.expiresAt) * 1000).toISOString());
       console.log('[useMyCredential] Specialty:', cred.specialty);
     }
-  }, [address, credential, isLoading, error]);
+  }, [address, tokenId, credential, isLoading, error]);
 
   return {
     credential: credential as Credential | undefined,

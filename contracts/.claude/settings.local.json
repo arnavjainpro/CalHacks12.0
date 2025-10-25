@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//home/sse/calhacks/CalHacks12.0/app/admin/**)",
+      "Read(//home/sse/calhacks/CalHacks12.0/app/pharmacist/dispense/**)",
+      "Read(//home/sse/calhacks/CalHacks12.0/components/**)",
+      "Read(//home/sse/calhacks/CalHacks12.0/**)",
+      "Bash(cat:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

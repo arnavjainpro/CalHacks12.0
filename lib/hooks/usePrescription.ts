@@ -1,5 +1,6 @@
 import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { CONTRACTS, type Prescription, PrescriptionStatus } from '@/lib/contracts/config';
+import { useEffect } from 'react';
 
 /**
  * Hook to create a prescription (doctor only)
@@ -14,12 +15,26 @@ export function useCreatePrescription() {
     validityDays: bigint,
     patientSecret: `0x${string}`
   ) => {
-    return await writeContractAsync({
-      address: CONTRACTS.PrescriptionRegistry.address,
-      abi: CONTRACTS.PrescriptionRegistry.abi,
-      functionName: 'createPrescription',
-      args: [patientDataHash, prescriptionDataHash, ipfsCid, validityDays, patientSecret],
-    });
+    console.log('[useCreatePrescription] Creating prescription with:');
+    console.log('  - Patient Data Hash:', patientDataHash);
+    console.log('  - Prescription Data Hash:', prescriptionDataHash);
+    console.log('  - IPFS CID:', ipfsCid);
+    console.log('  - Validity Days:', validityDays.toString());
+    console.log('  - Patient Secret:', patientSecret);
+
+    try {
+      const result = await writeContractAsync({
+        address: CONTRACTS.PrescriptionRegistry.address,
+        abi: CONTRACTS.PrescriptionRegistry.abi,
+        functionName: 'createPrescription',
+        args: [patientDataHash, prescriptionDataHash, ipfsCid, validityDays, patientSecret],
+      });
+      console.log('[useCreatePrescription] Success! Transaction hash:', result);
+      return result;
+    } catch (err) {
+      console.error('[useCreatePrescription] Error creating prescription:', err);
+      throw err;
+    }
   };
 
   return {
@@ -43,6 +58,16 @@ export function useMyPrescriptions() {
       enabled: !!address,
     },
   });
+
+  useEffect(() => {
+    console.log('[useMyPrescriptions] Address:', address);
+    console.log('[useMyPrescriptions] Loading:', isLoading);
+    console.log('[useMyPrescriptions] Error:', error);
+    console.log('[useMyPrescriptions] Prescription IDs:', prescriptionIds);
+    if (prescriptionIds) {
+      console.log('[useMyPrescriptions] Count:', (prescriptionIds as bigint[]).length);
+    }
+  }, [address, prescriptionIds, isLoading, error]);
 
   return {
     prescriptionIds: prescriptionIds as bigint[] | undefined,
@@ -149,6 +174,16 @@ export function useVerifyPrescription(
     },
   });
 
+  useEffect(() => {
+    console.log('[useVerifyPrescription] Pharmacist Address:', address);
+    console.log('[useVerifyPrescription] Prescription ID:', prescriptionId?.toString());
+    console.log('[useVerifyPrescription] Patient Hash:', patientHash);
+    console.log('[useVerifyPrescription] Prescription Hash:', prescriptionHash);
+    console.log('[useVerifyPrescription] Loading:', isLoading);
+    console.log('[useVerifyPrescription] Error:', error);
+    console.log('[useVerifyPrescription] Verified Prescription:', prescription);
+  }, [address, prescriptionId, patientHash, prescriptionHash, isLoading, error, prescription]);
+
   return {
     prescription: prescription as Prescription | undefined,
     isLoading,
@@ -199,12 +234,24 @@ export function useDispensePrescription() {
     providedPatientHash: `0x${string}`,
     providedPrescriptionHash: `0x${string}`
   ) => {
-    return await writeContractAsync({
-      address: CONTRACTS.PrescriptionRegistry.address,
-      abi: CONTRACTS.PrescriptionRegistry.abi,
-      functionName: 'dispensePrescription',
-      args: [prescriptionId, providedPatientHash, providedPrescriptionHash],
-    });
+    console.log('[useDispensePrescription] Dispensing prescription:');
+    console.log('  - Prescription ID:', prescriptionId.toString());
+    console.log('  - Patient Hash:', providedPatientHash);
+    console.log('  - Prescription Hash:', providedPrescriptionHash);
+
+    try {
+      const result = await writeContractAsync({
+        address: CONTRACTS.PrescriptionRegistry.address,
+        abi: CONTRACTS.PrescriptionRegistry.abi,
+        functionName: 'dispensePrescription',
+        args: [prescriptionId, providedPatientHash, providedPrescriptionHash],
+      });
+      console.log('[useDispensePrescription] Success! Transaction hash:', result);
+      return result;
+    } catch (err) {
+      console.error('[useDispensePrescription] Error dispensing prescription:', err);
+      throw err;
+    }
   };
 
   return {
