@@ -20,6 +20,7 @@ contract PrescriptionRegistryTest is Test {
     bytes32 constant PATIENT_HASH = keccak256("patient-data");
     bytes32 constant RX_HASH = keccak256("prescription-data");
     string constant IPFS_CID = "QmPrescription123";
+    bytes32 constant PATIENT_SECRET = keccak256("patient-secret-123");
 
     event PrescriptionCreated(
         uint256 indexed prescriptionId,
@@ -92,7 +93,8 @@ contract PrescriptionRegistryTest is Test {
             PATIENT_HASH,
             RX_HASH,
             IPFS_CID,
-            validityDays
+            validityDays,
+            PATIENT_SECRET
         );
 
         vm.stopPrank();
@@ -100,48 +102,44 @@ contract PrescriptionRegistryTest is Test {
         assertEq(rxId, 1, "Prescription ID should be 1");
         assertEq(registry.totalPrescriptions(), 1, "Should have 1 prescription");
 
-        // Verify prescription details
-        (
-            uint256 docTokenId,
-            bytes32 patientHash,
-            bytes32 rxHash,
-            string memory ipfsCid,
-            PrescriptionRegistry.PrescriptionStatus status,
-            ,
-            ,
-            ,
-        ) = registry.getPrescriptionDetails(rxId);
+        // Verify prescription details as doctor
+        vm.prank(doctor);
+        PrescriptionRegistry.Prescription memory rx = registry.getPrescriptionAsDoctor(rxId);
 
-        assertEq(docTokenId, doctorTokenId);
-        assertEq(patientHash, PATIENT_HASH);
-        assertEq(rxHash, RX_HASH);
-        assertEq(ipfsCid, IPFS_CID);
-        assertTrue(status == PrescriptionRegistry.PrescriptionStatus.Active);
+        assertEq(rx.doctorTokenId, doctorTokenId);
+        assertEq(rx.patientDataHash, PATIENT_HASH);
+        assertEq(rx.prescriptionDataHash, RX_HASH);
+        assertEq(rx.ipfsCid, IPFS_CID);
+        assertEq(rx.patientSecret, PATIENT_SECRET);
+        assertTrue(rx.status == PrescriptionRegistry.PrescriptionStatus.Active);
     }
 
     function test_RevertWhen_UnauthorizedCreation() external {
         vm.prank(patient); // Patient has no credential
         vm.expectRevert("No credential found");
-        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
     }
 
     function test_RevertWhen_InvalidPrescriptionData() external {
         vm.startPrank(doctor);
 
         vm.expectRevert("Invalid patient data hash");
-        registry.createPrescription(bytes32(0), RX_HASH, IPFS_CID, 30);
+        registry.createPrescription(bytes32(0), RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         vm.expectRevert("Invalid prescription data hash");
-        registry.createPrescription(PATIENT_HASH, bytes32(0), IPFS_CID, 30);
+        registry.createPrescription(PATIENT_HASH, bytes32(0), IPFS_CID, 30, PATIENT_SECRET);
 
         vm.expectRevert("IPFS CID required");
-        registry.createPrescription(PATIENT_HASH, RX_HASH, "", 30);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, "", 30, PATIENT_SECRET);
 
         vm.expectRevert("Invalid validity period");
-        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 0);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 0, PATIENT_SECRET);
 
         vm.expectRevert("Invalid validity period");
-        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 366);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 366, PATIENT_SECRET);
+
+        vm.expectRevert("Patient secret required");
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, bytes32(0));
 
         vm.stopPrank();
     }
@@ -151,7 +149,7 @@ contract PrescriptionRegistryTest is Test {
     function test_DispensePrescription() external {
         // Create prescription
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         // Dispense prescription
         vm.startPrank(pharmacist);
@@ -163,15 +161,15 @@ contract PrescriptionRegistryTest is Test {
 
         vm.stopPrank();
 
-        // Verify status changed
-        PrescriptionRegistry.Prescription memory rx = registry.getPrescription(rxId);
+        // Verify status changed - admin checks it
+        PrescriptionRegistry.Prescription memory rx = registry.getPrescriptionAsAdmin(rxId);
         assertTrue(rx.status == PrescriptionRegistry.PrescriptionStatus.Dispensed);
         assertEq(rx.pharmacistTokenId, pharmacistTokenId);
     }
 
     function test_RevertWhen_UnauthorizedDispensing() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         vm.prank(patient);
         vm.expectRevert("No credential found");
@@ -180,7 +178,7 @@ contract PrescriptionRegistryTest is Test {
 
     function test_RevertWhen_DataMismatch() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         bytes32 wrongHash = keccak256("wrong-data");
 
@@ -197,7 +195,7 @@ contract PrescriptionRegistryTest is Test {
 
     function test_RevertWhen_AlreadyDispensed() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         vm.prank(pharmacist);
         registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
@@ -209,7 +207,7 @@ contract PrescriptionRegistryTest is Test {
 
     function test_RevertWhen_Expired() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         // Fast forward past expiry
         vm.warp(block.timestamp + 31 days);
@@ -223,18 +221,18 @@ contract PrescriptionRegistryTest is Test {
 
     function test_CancelPrescription() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         vm.prank(doctor);
         registry.cancelPrescription(rxId, "Patient requested cancellation");
 
-        PrescriptionRegistry.Prescription memory rx = registry.getPrescription(rxId);
+        PrescriptionRegistry.Prescription memory rx = registry.getPrescriptionAsAdmin(rxId);
         assertTrue(rx.status == PrescriptionRegistry.PrescriptionStatus.Cancelled);
     }
 
     function test_RevertWhen_NotIssuingDoctor() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         address otherDoctor = makeAddr("otherDoctor");
         sbt.issueCredential(
@@ -255,21 +253,23 @@ contract PrescriptionRegistryTest is Test {
 
     function test_IsPrescriptionDispensable() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
-        assertTrue(registry.isPrescriptionDispensable(rxId), "Should be dispensable");
+        vm.prank(pharmacist);
+        assertTrue(registry.isPrescriptionDispensable(rxId, PATIENT_HASH, RX_HASH), "Should be dispensable");
 
         // After dispensing
         vm.prank(pharmacist);
         registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
 
-        assertFalse(registry.isPrescriptionDispensable(rxId), "Should not be dispensable after filling");
+        vm.prank(pharmacist);
+        assertFalse(registry.isPrescriptionDispensable(rxId, PATIENT_HASH, RX_HASH), "Should not be dispensable after filling");
     }
 
     function test_DoctorCanViewOwnPrescriptions() external {
         vm.startPrank(doctor);
-        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
-        registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx2", 30);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx2", 30, PATIENT_SECRET);
 
         // Doctor can view their own prescriptions
         uint256[] memory rxIds = registry.getMyPrescriptions();
@@ -281,7 +281,7 @@ contract PrescriptionRegistryTest is Test {
 
     function test_PharmacistCanViewOwnDispensals() external {
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         vm.startPrank(pharmacist);
         registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
@@ -296,12 +296,12 @@ contract PrescriptionRegistryTest is Test {
     function test_AdminCanAccessAuditTrails() external {
         // Owner is admin by default
         vm.startPrank(doctor);
-        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
-        registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx2", 30);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx2", 30, PATIENT_SECRET);
         vm.stopPrank();
 
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx3", 30);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, "QmRx3", 30, PATIENT_SECRET);
 
         vm.prank(pharmacist);
         registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
@@ -316,7 +316,7 @@ contract PrescriptionRegistryTest is Test {
 
     function test_RevertWhen_NonAdminAccessesAuditTrails() external {
         vm.prank(doctor);
-        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         // Non-admin cannot access other provider's audit trails
         vm.prank(pharmacist);
@@ -337,7 +337,7 @@ contract PrescriptionRegistryTest is Test {
 
         // New admin can now access audit trails
         vm.prank(doctor);
-        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30);
+        registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
         vm.prank(newAdmin);
         uint256[] memory rxIds = registry.getDoctorPrescriptions(doctorTokenId);
@@ -358,9 +358,10 @@ contract PrescriptionRegistryTest is Test {
         validityDays = bound(validityDays, 1, 365);
 
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, validityDays);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, validityDays, PATIENT_SECRET);
 
-        assertTrue(registry.isPrescriptionDispensable(rxId));
+        vm.prank(pharmacist);
+        assertTrue(registry.isPrescriptionDispensable(rxId, PATIENT_HASH, RX_HASH));
     }
 
     function testFuzz_DispenseAfterTime(uint256 validityDays, uint256 timeElapsed) external {
@@ -368,7 +369,7 @@ contract PrescriptionRegistryTest is Test {
         timeElapsed = bound(timeElapsed, 0, 365 days * 2);
 
         vm.prank(doctor);
-        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, validityDays);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, validityDays, PATIENT_SECRET);
 
         vm.warp(block.timestamp + timeElapsed);
 
@@ -378,12 +379,102 @@ contract PrescriptionRegistryTest is Test {
             vm.prank(pharmacist);
             registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
 
-            PrescriptionRegistry.Prescription memory rx = registry.getPrescription(rxId);
+            PrescriptionRegistry.Prescription memory rx = registry.getPrescriptionAsAdmin(rxId);
             assertTrue(rx.status == PrescriptionRegistry.PrescriptionStatus.Dispensed);
         } else {
             vm.prank(pharmacist);
             vm.expectRevert("Prescription expired");
             registry.dispensePrescription(rxId, PATIENT_HASH, RX_HASH);
         }
+    }
+
+    // ============ Access Control Tests ============
+
+    function test_PatientCanAccessWithProof() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+
+        // Patient can access with correct secret
+        PrescriptionRegistry.Prescription memory rx = registry.getPrescriptionWithProof(rxId, PATIENT_SECRET);
+        assertEq(rx.prescriptionId, rxId);
+        assertEq(rx.patientSecret, PATIENT_SECRET);
+    }
+
+    function test_RevertWhen_PatientUsesWrongProof() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+
+        bytes32 wrongSecret = keccak256("wrong-secret");
+        vm.expectRevert("Invalid patient proof");
+        registry.getPrescriptionWithProof(rxId, wrongSecret);
+    }
+
+    function test_PharmacistCanVerifyForDispensing() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+
+        // Pharmacist can verify prescription
+        vm.prank(pharmacist);
+        PrescriptionRegistry.Prescription memory rx = registry.verifyPrescriptionForDispensing(
+            rxId,
+            PATIENT_HASH,
+            RX_HASH
+        );
+        assertEq(rx.prescriptionId, rxId);
+    }
+
+    function test_RevertWhen_NonPharmacistVerifies() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+
+        vm.prank(patient);
+        vm.expectRevert("No credential found");
+        registry.verifyPrescriptionForDispensing(rxId, PATIENT_HASH, RX_HASH);
+    }
+
+    function test_DoctorCanAccessOwnPrescription() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+
+        vm.prank(doctor);
+        PrescriptionRegistry.Prescription memory rx = registry.getPrescriptionAsDoctor(rxId);
+        assertEq(rx.prescriptionId, rxId);
+    }
+
+    function test_RevertWhen_DoctorAccessesOthersPrescription() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+
+        address otherDoctor = makeAddr("otherDoctor");
+        sbt.issueCredential(
+            otherDoctor,
+            MedicalCredentialSBT.CredentialType.Doctor,
+            "other-hash",
+            "Surgery",
+            "QmOther",
+            5
+        );
+
+        vm.prank(otherDoctor);
+        vm.expectRevert("Not the issuing doctor");
+        registry.getPrescriptionAsDoctor(rxId);
+    }
+
+    function test_AdminCanAccessAnyPrescription() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+
+        // Owner (admin) can access any prescription
+        PrescriptionRegistry.Prescription memory rx = registry.getPrescriptionAsAdmin(rxId);
+        assertEq(rx.prescriptionId, rxId);
+    }
+
+    function test_RevertWhen_NonAdminAccessesPrescription() external {
+        vm.prank(doctor);
+        uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
+
+        vm.prank(pharmacist);
+        vm.expectRevert("Only admin can call this function");
+        registry.getPrescriptionAsAdmin(rxId);
     }
 }

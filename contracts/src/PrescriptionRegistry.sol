@@ -32,6 +32,7 @@ contract PrescriptionRegistry {
         PrescriptionStatus status;
         uint256 dispensedAt;             // Timestamp of dispensing (0 if not dispensed)
         uint256 pharmacistTokenId;       // SBT ID of pharmacist who dispensed
+        bytes32 patientSecret;           // Secret given to patient for access (hash of random nonce)
     }
     
     // ============ State Variables ============
@@ -39,7 +40,7 @@ contract PrescriptionRegistry {
     MedicalCredentialSBT public immutable credentialSBT;
     address public admin;  // For regulatory/compliance access
 
-    mapping(uint256 => Prescription) public prescriptions;
+    mapping(uint256 => Prescription) internal prescriptions;  // Now internal for privacy
     uint256 private _prescriptionIdCounter;
 
     // Audit trail mappings (internal for privacy)
@@ -107,13 +108,15 @@ contract PrescriptionRegistry {
      * @param prescriptionDataHash SHA-256 hash of medication details
      * @param ipfsCid IPFS content identifier for encrypted prescription data
      * @param validityDays Number of days the prescription is valid
+     * @param patientSecret Secret to give to patient (hash of random nonce, put in QR code)
      * @return prescriptionId The ID of the newly created prescription
      */
     function createPrescription(
         bytes32 patientDataHash,
         bytes32 prescriptionDataHash,
         string calldata ipfsCid,
-        uint256 validityDays
+        uint256 validityDays,
+        bytes32 patientSecret
     ) external returns (uint256) {
         // Verify caller is a doctor with valid credential
         uint256 doctorTokenId = credentialSBT.getHolderTokenId(msg.sender);
@@ -130,6 +133,7 @@ contract PrescriptionRegistry {
         require(prescriptionDataHash != bytes32(0), "Invalid prescription data hash");
         require(bytes(ipfsCid).length > 0, "IPFS CID required");
         require(validityDays > 0 && validityDays <= 365, "Invalid validity period");
+        require(patientSecret != bytes32(0), "Patient secret required");
         
         _prescriptionIdCounter++;
         uint256 newPrescriptionId = _prescriptionIdCounter;
@@ -146,7 +150,8 @@ contract PrescriptionRegistry {
             expiresAt: expiryTimestamp,
             status: PrescriptionStatus.Active,
             dispensedAt: 0,
-            pharmacistTokenId: 0
+            pharmacistTokenId: 0,
+            patientSecret: patientSecret
         });
         
         doctorPrescriptions[doctorTokenId].push(newPrescriptionId);
@@ -247,76 +252,141 @@ contract PrescriptionRegistry {
         );
     }
     
-    // ============ View Functions ============
-    
+    // ============ Access-Controlled View Functions ============
+
     /**
-     * @dev Get prescription details
+     * @dev Doctor can view their own prescription
      * @param prescriptionId The prescription ID
      * @return Prescription struct with all details
      */
-    function getPrescription(uint256 prescriptionId)
+    function getPrescriptionAsDoctor(uint256 prescriptionId)
         external
         view
         returns (Prescription memory)
     {
-        require(prescriptions[prescriptionId].prescriptionId != 0, "Prescription does not exist");
-        return prescriptions[prescriptionId];
+        Prescription memory rx = prescriptions[prescriptionId];
+        require(rx.prescriptionId != 0, "Prescription does not exist");
+
+        // Verify caller is the doctor who issued it
+        uint256 doctorTokenId = credentialSBT.getHolderTokenId(msg.sender);
+        require(rx.doctorTokenId == doctorTokenId, "Not the issuing doctor");
+
+        return rx;
     }
-    
+
     /**
-     * @dev Get prescription details (individual fields for easier frontend integration)
+     * @dev Patient can view prescription with their secret (from QR code)
      * @param prescriptionId The prescription ID
+     * @param patientSecret The secret given to patient
+     * @return Prescription struct with all details
      */
-    function getPrescriptionDetails(uint256 prescriptionId)
+    function getPrescriptionWithProof(uint256 prescriptionId, bytes32 patientSecret)
         external
         view
-        returns (
-            uint256 doctorTokenId,
-            bytes32 patientDataHash,
-            bytes32 prescriptionDataHash,
-            string memory ipfsCid,
-            PrescriptionStatus status,
-            uint256 issuedAt,
-            uint256 expiresAt,
-            uint256 dispensedAt,
-            uint256 pharmacistTokenId
-        )
+        returns (Prescription memory)
     {
         Prescription memory rx = prescriptions[prescriptionId];
         require(rx.prescriptionId != 0, "Prescription does not exist");
-        
-        return (
-            rx.doctorTokenId,
-            rx.patientDataHash,
-            rx.prescriptionDataHash,
-            rx.ipfsCid,
-            rx.status,
-            rx.issuedAt,
-            rx.expiresAt,
-            rx.dispensedAt,
-            rx.pharmacistTokenId
+        require(rx.patientSecret == patientSecret, "Invalid patient proof");
+
+        return rx;
+    }
+
+    /**
+     * @dev Pharmacist verifies prescription before dispensing (needs patient hashes)
+     * @param prescriptionId The prescription ID
+     * @param providedPatientHash Patient hash for verification
+     * @param providedPrescriptionHash Prescription hash for verification
+     * @return Prescription struct if verification passes
+     */
+    function verifyPrescriptionForDispensing(
+        uint256 prescriptionId,
+        bytes32 providedPatientHash,
+        bytes32 providedPrescriptionHash
+    )
+        external
+        view
+        returns (Prescription memory)
+    {
+        Prescription memory rx = prescriptions[prescriptionId];
+        require(rx.prescriptionId != 0, "Prescription does not exist");
+
+        // Verify caller is a pharmacist with valid credential
+        uint256 pharmacistTokenId = credentialSBT.getHolderTokenId(msg.sender);
+        require(pharmacistTokenId != 0, "No credential found");
+        require(
+            credentialSBT.hasValidCredential(
+                msg.sender,
+                MedicalCredentialSBT.CredentialType.Pharmacist
+            ),
+            "Must be a valid pharmacist"
         );
+
+        // Verify data integrity (prevent tampering)
+        require(
+            rx.patientDataHash == providedPatientHash,
+            "Patient data mismatch - possible tampering"
+        );
+        require(
+            rx.prescriptionDataHash == providedPrescriptionHash,
+            "Prescription data mismatch - possible tampering"
+        );
+
+        return rx;
+    }
+
+    /**
+     * @dev Admin can access any prescription for regulatory compliance
+     * @param prescriptionId The prescription ID
+     * @return Prescription struct with all details
+     */
+    function getPrescriptionAsAdmin(uint256 prescriptionId)
+        external
+        view
+        onlyAdmin
+        returns (Prescription memory)
+    {
+        Prescription memory rx = prescriptions[prescriptionId];
+        require(rx.prescriptionId != 0, "Prescription does not exist");
+        return rx;
     }
     
     /**
-     * @dev Check if prescription is currently dispensable
+     * @dev Check if prescription is currently dispensable (pharmacist-only)
      * @param prescriptionId The prescription ID
+     * @param providedPatientHash Patient hash for verification
+     * @param providedPrescriptionHash Prescription hash for verification
      * @return bool True if prescription can be dispensed right now
      */
-    function isPrescriptionDispensable(uint256 prescriptionId)
+    function isPrescriptionDispensable(
+        uint256 prescriptionId,
+        bytes32 providedPatientHash,
+        bytes32 providedPrescriptionHash
+    )
         external
         view
         returns (bool)
     {
         Prescription memory rx = prescriptions[prescriptionId];
-        
+
+        // Verify caller is a pharmacist
+        uint256 pharmacistTokenId = credentialSBT.getHolderTokenId(msg.sender);
+        if (pharmacistTokenId == 0) return false;
+        if (!credentialSBT.hasValidCredential(msg.sender, MedicalCredentialSBT.CredentialType.Pharmacist)) {
+            return false;
+        }
+
         if (rx.prescriptionId == 0) return false;
         if (rx.status != PrescriptionStatus.Active) return false;
         if (block.timestamp >= rx.expiresAt) return false;
-        
+
+        // Verify data integrity
+        if (rx.patientDataHash != providedPatientHash) return false;
+        if (rx.prescriptionDataHash != providedPrescriptionHash) return false;
+
         // Verify doctor's credential is still valid
         if (!credentialSBT.isCredentialValid(rx.doctorTokenId)) return false;
-        
+
         return true;
     }
     
