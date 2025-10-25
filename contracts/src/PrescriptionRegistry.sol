@@ -35,10 +35,36 @@ contract PrescriptionRegistry {
         bytes32 patientSecret;           // Secret given to patient for access (hash of random nonce)
     }
     
+    // ============ Enums for Multi-Sig ============
+
+    enum AdminActionType {
+        AccessPrescription,
+        GetDoctorPrescriptions,
+        GetPharmacistDispensals,
+        AddSigner,
+        RemoveSigner
+    }
+
+    // ============ Structs for Multi-Sig ============
+
+    struct AdminAction {
+        uint256 nonce;
+        AdminActionType actionType;
+        bytes data;
+        uint256 approvalCount;
+        bool executed;
+        mapping(address => bool) hasApproved;
+    }
+
     // ============ State Variables ============
 
     MedicalCredentialSBT public immutable credentialSBT;
-    address public admin;  // For regulatory/compliance access
+
+    // Multi-sig governance
+    address[] public signers;
+    uint256 public constant REQUIRED_SIGNATURES = 2;
+    uint256 private _actionNonce;
+    mapping(uint256 => AdminAction) public pendingActions;
 
     mapping(uint256 => Prescription) internal prescriptions;  // Now internal for privacy
     uint256 private _prescriptionIdCounter;
@@ -80,24 +106,61 @@ contract PrescriptionRegistry {
         uint256 expiredAt
     );
 
-    event AdminChanged(
-        address indexed previousAdmin,
-        address indexed newAdmin
+    event AdminActionProposed(
+        uint256 indexed actionNonce,
+        AdminActionType actionType,
+        address indexed proposer
+    );
+
+    event AdminActionApproved(
+        uint256 indexed actionNonce,
+        address indexed signer,
+        uint256 approvalCount
+    );
+
+    event AdminActionExecuted(
+        uint256 indexed actionNonce,
+        AdminActionType actionType
+    );
+
+    event SignerAdded(
+        address indexed signer
+    );
+
+    event SignerRemoved(
+        address indexed signer
     );
 
     // ============ Modifiers ============
 
-    modifier onlyAdmin() {
-        require(msg.sender == admin, "Only admin can call this function");
+    modifier onlySigner() {
+        bool _isSigner = false;
+        for (uint256 i = 0; i < signers.length; i++) {
+            if (signers[i] == msg.sender) {
+                _isSigner = true;
+                break;
+            }
+        }
+        require(_isSigner, "Not a signer");
         _;
+    }
+
+    modifier onlyMultiSig(uint256 actionNonce) {
+        AdminAction storage action = pendingActions[actionNonce];
+        require(action.approvalCount >= REQUIRED_SIGNATURES, "Insufficient signatures");
+        require(!action.executed, "Already executed");
+        _;
+        action.executed = true;
     }
 
     // ============ Constructor ============
 
-    constructor(address _credentialSBT) {
+    constructor(address _credentialSBT, address[] memory _signers) {
         require(_credentialSBT != address(0), "Invalid SBT address");
+        require(_signers.length >= REQUIRED_SIGNATURES, "Not enough signers");
+
         credentialSBT = MedicalCredentialSBT(_credentialSBT);
-        admin = msg.sender;  // Deployer is initial admin
+        signers = _signers;
     }
     
     // ============ External Functions ============
@@ -336,22 +399,6 @@ contract PrescriptionRegistry {
     }
 
     /**
-     * @dev Admin can access any prescription for regulatory compliance
-     * @param prescriptionId The prescription ID
-     * @return Prescription struct with all details
-     */
-    function getPrescriptionAsAdmin(uint256 prescriptionId)
-        external
-        view
-        onlyAdmin
-        returns (Prescription memory)
-    {
-        Prescription memory rx = prescriptions[prescriptionId];
-        require(rx.prescriptionId != 0, "Prescription does not exist");
-        return rx;
-    }
-    
-    /**
      * @dev Check if prescription is currently dispensable (pharmacist-only)
      * @param prescriptionId The prescription ID
      * @param providedPatientHash Patient hash for verification
@@ -424,44 +471,182 @@ contract PrescriptionRegistry {
         return pharmacistDispensals[pharmacistTokenId];
     }
 
+    // ============ Multi-Sig Governance Functions ============
+
     /**
-     * @dev Get all prescriptions issued by a doctor (admin-only for auditing)
-     * @param doctorTokenId The doctor's SBT token ID
+     * @dev Propose an admin action (signer-only)
+     * @param actionType The type of action to propose
+     * @param data Encoded action data
+     * @return actionNonce The nonce of the proposed action
+     */
+    function proposeAdminAction(AdminActionType actionType, bytes calldata data)
+        external
+        onlySigner
+        returns (uint256)
+    {
+        _actionNonce++;
+        uint256 nonce = _actionNonce;
+
+        AdminAction storage action = pendingActions[nonce];
+        action.nonce = nonce;
+        action.actionType = actionType;
+        action.data = data;
+        action.approvalCount = 1;  // Proposer auto-approves
+        action.executed = false;
+        action.hasApproved[msg.sender] = true;
+
+        emit AdminActionProposed(nonce, actionType, msg.sender);
+        emit AdminActionApproved(nonce, msg.sender, 1);
+
+        return nonce;
+    }
+
+    /**
+     * @dev Approve a pending admin action (signer-only)
+     * @param actionNonce The nonce of the action to approve
+     */
+    function approveAdminAction(uint256 actionNonce) external onlySigner {
+        AdminAction storage action = pendingActions[actionNonce];
+        require(action.nonce != 0, "Action does not exist");
+        require(!action.executed, "Action already executed");
+        require(!action.hasApproved[msg.sender], "Already approved");
+
+        action.hasApproved[msg.sender] = true;
+        action.approvalCount++;
+
+        emit AdminActionApproved(actionNonce, msg.sender, action.approvalCount);
+    }
+
+    /**
+     * @dev Execute approved action to get prescription (multi-sig required)
+     * @param actionNonce The nonce of the approved action
+     * @return Prescription struct with all details
+     */
+    function executeGetPrescription(uint256 actionNonce)
+        external
+        onlyMultiSig(actionNonce)
+        returns (Prescription memory)
+    {
+        AdminAction storage action = pendingActions[actionNonce];
+        require(action.actionType == AdminActionType.AccessPrescription, "Wrong action type");
+
+        uint256 prescriptionId = abi.decode(action.data, (uint256));
+        Prescription memory rx = prescriptions[prescriptionId];
+        require(rx.prescriptionId != 0, "Prescription does not exist");
+
+        emit AdminActionExecuted(actionNonce, AdminActionType.AccessPrescription);
+        return rx;
+    }
+
+    /**
+     * @dev Execute approved action to get doctor prescriptions (multi-sig required)
+     * @param actionNonce The nonce of the approved action
      * @return uint256[] Array of prescription IDs
      */
-    function getDoctorPrescriptions(uint256 doctorTokenId)
+    function executeGetDoctorPrescriptions(uint256 actionNonce)
         external
-        view
-        onlyAdmin
+        onlyMultiSig(actionNonce)
         returns (uint256[] memory)
     {
+        AdminAction storage action = pendingActions[actionNonce];
+        require(action.actionType == AdminActionType.GetDoctorPrescriptions, "Wrong action type");
+
+        uint256 doctorTokenId = abi.decode(action.data, (uint256));
+
+        emit AdminActionExecuted(actionNonce, AdminActionType.GetDoctorPrescriptions);
         return doctorPrescriptions[doctorTokenId];
     }
 
     /**
-     * @dev Get all prescriptions dispensed by a pharmacist (admin-only for auditing)
-     * @param pharmacistTokenId The pharmacist's SBT token ID
+     * @dev Execute approved action to get pharmacist dispensals (multi-sig required)
+     * @param actionNonce The nonce of the approved action
      * @return uint256[] Array of prescription IDs
      */
-    function getPharmacistDispensals(uint256 pharmacistTokenId)
+    function executeGetPharmacistDispensals(uint256 actionNonce)
         external
-        view
-        onlyAdmin
+        onlyMultiSig(actionNonce)
         returns (uint256[] memory)
     {
+        AdminAction storage action = pendingActions[actionNonce];
+        require(action.actionType == AdminActionType.GetPharmacistDispensals, "Wrong action type");
+
+        uint256 pharmacistTokenId = abi.decode(action.data, (uint256));
+
+        emit AdminActionExecuted(actionNonce, AdminActionType.GetPharmacistDispensals);
         return pharmacistDispensals[pharmacistTokenId];
     }
 
     /**
-     * @dev Set new admin address (admin-only)
-     * @param newAdmin The new admin address
+     * @dev Execute approved action to add a new signer (multi-sig required)
+     * @param actionNonce The nonce of the approved action
      */
-    function setAdmin(address newAdmin) external onlyAdmin {
-        require(newAdmin != address(0), "Invalid admin address");
-        address previousAdmin = admin;
-        admin = newAdmin;
-        emit AdminChanged(previousAdmin, newAdmin);
+    function executeAddSigner(uint256 actionNonce) external onlyMultiSig(actionNonce) {
+        AdminAction storage action = pendingActions[actionNonce];
+        require(action.actionType == AdminActionType.AddSigner, "Wrong action type");
+
+        address newSigner = abi.decode(action.data, (address));
+        require(newSigner != address(0), "Invalid signer address");
+
+        // Check not already a signer
+        for (uint256 i = 0; i < signers.length; i++) {
+            require(signers[i] != newSigner, "Already a signer");
+        }
+
+        signers.push(newSigner);
+
+        emit AdminActionExecuted(actionNonce, AdminActionType.AddSigner);
+        emit SignerAdded(newSigner);
     }
+
+    /**
+     * @dev Execute approved action to remove a signer (multi-sig required)
+     * @param actionNonce The nonce of the approved action
+     */
+    function executeRemoveSigner(uint256 actionNonce) external onlyMultiSig(actionNonce) {
+        AdminAction storage action = pendingActions[actionNonce];
+        require(action.actionType == AdminActionType.RemoveSigner, "Wrong action type");
+
+        address signerToRemove = abi.decode(action.data, (address));
+        require(signers.length > REQUIRED_SIGNATURES, "Cannot remove - would go below threshold");
+
+        // Find and remove signer
+        bool found = false;
+        for (uint256 i = 0; i < signers.length; i++) {
+            if (signers[i] == signerToRemove) {
+                signers[i] = signers[signers.length - 1];
+                signers.pop();
+                found = true;
+                break;
+            }
+        }
+        require(found, "Signer not found");
+
+        emit AdminActionExecuted(actionNonce, AdminActionType.RemoveSigner);
+        emit SignerRemoved(signerToRemove);
+    }
+
+    /**
+     * @dev Get number of signers
+     * @return uint256 Current number of signers
+     */
+    function getSignerCount() external view returns (uint256) {
+        return signers.length;
+    }
+
+    /**
+     * @dev Check if address is a signer
+     * @param account Address to check
+     * @return bool True if account is a signer
+     */
+    function isSigner(address account) external view returns (bool) {
+        for (uint256 i = 0; i < signers.length; i++) {
+            if (signers[i] == account) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     
     /**
      * @dev Get total number of prescriptions created

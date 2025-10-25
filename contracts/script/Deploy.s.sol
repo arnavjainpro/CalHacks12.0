@@ -22,6 +22,31 @@ contract Deploy is Script {
         console.log("Chain ID:", block.chainid);
         console.log("===========================================");
 
+        // Setup multi-sig signers (2-of-3)
+        address[] memory signers = new address[](3);
+        signers[0] = deployer;  // Deployer is first signer
+
+        // Try to get additional signers from env, or use deployer for demo
+        try vm.envAddress("SIGNER_2") returns (address signer2) {
+            signers[1] = signer2;
+        } catch {
+            console.log("   SIGNER_2 not set, using deployer as backup");
+            signers[1] = deployer;
+        }
+
+        try vm.envAddress("SIGNER_3") returns (address signer3) {
+            signers[2] = signer3;
+        } catch {
+            console.log("   SIGNER_3 not set, using deployer as backup");
+            signers[2] = deployer;
+        }
+
+        console.log("   Multi-sig signers:");
+        console.log("     Signer 1:", signers[0]);
+        console.log("     Signer 2:", signers[1]);
+        console.log("     Signer 3:", signers[2]);
+        console.log("   Required signatures: 2 of 3");
+
         vm.startBroadcast(deployerPrivateKey);
 
         // Step 1: Deploy MedicalCredentialSBT
@@ -29,9 +54,9 @@ contract Deploy is Script {
         MedicalCredentialSBT sbt = new MedicalCredentialSBT();
         console.log("   MedicalCredentialSBT deployed at:", address(sbt));
 
-        // Step 2: Deploy PrescriptionRegistry
-        console.log("\n2. Deploying PrescriptionRegistry...");
-        PrescriptionRegistry registry = new PrescriptionRegistry(address(sbt));
+        // Step 2: Deploy PrescriptionRegistry with multi-sig
+        console.log("\n2. Deploying PrescriptionRegistry with multi-sig governance...");
+        PrescriptionRegistry registry = new PrescriptionRegistry(address(sbt), signers);
         console.log("   PrescriptionRegistry deployed at:", address(registry));
 
         vm.stopBroadcast();
