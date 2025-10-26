@@ -1045,23 +1045,25 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                       <nav className="flex border-b border-gray-200">
                         <button
                           onClick={() => updateActiveTab({ viewMode: 'list' })}
-                          className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
+                          className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
                             activeTab.viewMode === 'list'
                               ? 'border-blue-500 text-blue-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
                         >
-                          📋 Prescription List
+                          <ClipboardList className="w-4 h-4" />
+                          Prescription List
                         </button>
                         <button
                           onClick={() => updateActiveTab({ viewMode: 'analytics' })}
-                          className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
+                          className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
                             activeTab.viewMode === 'analytics'
                               ? 'border-blue-500 text-blue-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
                         >
-                          📊 Analytics Dashboard
+                          <BarChart3 className="w-4 h-4" />
+                          Analytics Dashboard
                         </button>
                         <button
                           onClick={() => updateActiveTab({ viewMode: 'aiinsights' })}
