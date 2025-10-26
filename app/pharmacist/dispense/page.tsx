@@ -12,7 +12,7 @@ import { decodePrescriptionQR } from '@/lib/utils/qr';
 import { fetchFromIPFS, PrescriptionMetadata } from '@/lib/utils/ipfs';
 import { deriveEncryptionKey, decryptData, hashPatientData } from '@/lib/utils/crypto';
 import DrugInformationPanel from '@/components/DrugInformationPanel';
-import PrescriptionHistory from '@/components/PrescriptionHistory';
+import PrescriptionHistory from '@/components/PrescriptionDetails';
 
 export default function DispensePrescription() {
   const { address, isConnected } = useAccount();

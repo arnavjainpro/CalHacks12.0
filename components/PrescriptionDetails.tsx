@@ -62,7 +62,7 @@ const STATUS_NAMES: Record<number, string> = {
   3: 'Expired',
 };
 
-export default function PrescriptionHistory({
+export default function PrescriptionDetails({
   prescriptions,
   patientSecret,
 }: PrescriptionHistoryProps) {
@@ -78,30 +78,38 @@ export default function PrescriptionHistory({
       const enriched = await Promise.all(
         prescriptions.map(async (prescription) => {
           try {
-            // If metadata already exists (dummy data), use it directly
+            // If metadata already exists (from demo data or previous fetch), use it directly
             if (prescription.metadata) {
               return prescription;
             }
 
-            if (!prescription.ipfsCid) return prescription;
+            // If no IPFS CID, we can't fetch metadata
+            if (!prescription.ipfsCid || prescription.ipfsCid === '') {
+              return prescription;
+            }
 
-            // Fetch from IPFS
-            const data = await fetchFromIPFS(prescription.ipfsCid);
+            // Try to fetch from IPFS
+            try {
+              const data = await fetchFromIPFS(prescription.ipfsCid);
 
-            // Decrypt if we have the patient secret
-            if (patientSecret) {
-              const key = deriveEncryptionKey(patientSecret);
-              // The metadata should already be in the correct format
+              // Decrypt if we have the patient secret
+              if (patientSecret) {
+                const key = deriveEncryptionKey(patientSecret);
+                // The metadata should already be in the correct format
+                return {
+                  ...prescription,
+                  metadata: data,
+                };
+              }
+
               return {
                 ...prescription,
                 metadata: data,
               };
+            } catch (ipfsError) {
+              console.warn('Could not fetch from IPFS:', ipfsError);
+              return prescription;
             }
-
-            return {
-              ...prescription,
-              metadata: data,
-            };
           } catch (error) {
             console.error('Error fetching prescription metadata:', error);
             return prescription;

@@ -11,9 +11,12 @@ import {
 } from '@/lib/utils/paymaster';
 import { Address } from 'viem';
 
-export interface WriteContractParams extends Omit<PrepareCallParams, 'args'> {
+export interface WriteContractParams {
   address: Address;
+  abi: any;
+  functionName: string;
   args: any[];
+  value?: bigint;
 }
 
 /**
