@@ -1,7 +1,8 @@
-import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { useAccount, useReadContract } from 'wagmi';
 import { CONTRACTS, CredentialType, type Credential } from '@/lib/contracts/config';
 import { Address } from 'viem';
 import { useEffect } from 'react';
+import { useSponsoredWrite } from './useSponsoredWrite';
 
 /**
  * Hook to get the current user's credential
@@ -106,9 +107,10 @@ export function useCredentialByTokenId(tokenId?: bigint) {
 
 /**
  * Hook to issue a new credential (admin only)
+ * Now with sponsored gas support via Paymaster
  */
 export function useIssueCredential() {
-  const { writeContractAsync, isPending, error } = useWriteContract();
+  const { writeContractAsync, isPending, error } = useSponsoredWrite();
 
   const issueCredential = async (
     holder: Address,
@@ -135,9 +137,10 @@ export function useIssueCredential() {
 
 /**
  * Hook to revoke a credential (admin only)
+ * Now with sponsored gas support via Paymaster
  */
 export function useRevokeCredential() {
-  const { writeContractAsync, isPending, error } = useWriteContract();
+  const { writeContractAsync, isPending, error } = useSponsoredWrite();
 
   const revokeCredential = async (tokenId: bigint) => {
     return await writeContractAsync({
