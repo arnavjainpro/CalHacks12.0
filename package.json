@@ -29,6 +29,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-email": "^4.3.2",
+    "recharts": "^3.3.0",
     "resend": "^6.2.2",
     "tailwindcss": "^4.1.16",
     "viem": "^2.31.6",

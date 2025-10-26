@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode, useMemo } from 'react';
+import { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { createBaseAccountSDK, base } from '@base-org/account';
 import type { BaseAccountSDK } from '@base-org/account';
 
@@ -17,7 +17,22 @@ const BaseAccountContext = createContext<BaseAccountContextType>({
 });
 
 export function BaseAccountProvider({ children }: { children: ReactNode }) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const contextValue = useMemo(() => {
+    // Only initialize on client side after component is mounted
+    if (typeof window === 'undefined' || !isMounted) {
+      return {
+        sdk: null,
+        provider: null,
+        isAvailable: false,
+      };
+    }
+
     try {
       // Initialize Base Account SDK
       const sdk = createBaseAccountSDK({
@@ -41,7 +56,7 @@ export function BaseAccountProvider({ children }: { children: ReactNode }) {
         isAvailable: false,
       };
     }
-  }, []);
+  }, [isMounted]);
 
   return (
     <BaseAccountContext.Provider value={contextValue}>

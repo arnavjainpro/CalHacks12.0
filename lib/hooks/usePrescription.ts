@@ -54,7 +54,7 @@ export function useCreatePrescription() {
         throw new Error('PrescriptionCreated event not found in transaction logs');
       }
 
-      const prescriptionId = logs[0].args.prescriptionId as bigint;
+      const prescriptionId = (logs[0] as any).args.prescriptionId as bigint;
       console.log('[useCreatePrescription] Prescription ID:', prescriptionId.toString());
 
       return prescriptionId;

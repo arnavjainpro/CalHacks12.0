@@ -28,7 +28,7 @@ export function useMyCredential() {
     functionName: 'getCredential',
     args: [tokenId!],
     query: {
-      enabled: !!address && !!tokenId && tokenId > 0n,
+      enabled: !!address && !!tokenId && typeof tokenId === 'bigint' && tokenId > 0n,
     },
   });
 
