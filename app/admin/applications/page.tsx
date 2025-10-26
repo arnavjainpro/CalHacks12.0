@@ -224,90 +224,89 @@ export default function ApplicationsReviewPage() {
       </main>
 
       {/* Modals */}
-      {selectedApplicationId && (
+      {showDetailModal && selectedApplicationId && (
         <>
-          {selectedApp && selectedMetadata ? (
-            <>
-              <ApplicationDetailModal
-                application={selectedApp}
-                metadata={selectedMetadata}
-                isOpen={showDetailModal}
-                onClose={() => {
-                  setShowDetailModal(false);
-                  setSelectedApplicationId(null);
-                }}
-                onApprove={handleApprove}
-                onReject={handleReject}
-              />
-
-              <RejectApplicationModal
-                applicationId={selectedApp.applicationId}
-                applicantName={selectedMetadata.personalInfo.fullName}
-                isOpen={showRejectModal}
-                onClose={() => {
-                  setShowRejectModal(false);
-                  setSelectedApplicationId(null);
-                }}
-                onSuccess={handleSuccess}
-              />
-
-              <ApproveApplicationFlow
-                application={selectedApp}
-                metadata={selectedMetadata}
-                isOpen={showApproveFlow}
-                onClose={() => {
-                  setShowApproveFlow(false);
-                  setSelectedApplicationId(null);
-                }}
-                onSuccess={handleSuccess}
-              />
-            </>
-          ) : showDetailModal ? (
-            // Loading or Error modal
-            <div className="fixed inset-0 z-50 overflow-y-auto">
-              <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-                <div
-                  className="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75"
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedApplicationId(null);
-                  }}
-                ></div>
-                <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-                  {detailsError ? (
-                    <div className="text-center py-8">
-                      <div className="text-red-600 dark:text-red-400 mb-4">
-                        <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </div>
-                      <p className="text-red-600 dark:text-red-400 mb-4">
-                        Failed to load application details
-                      </p>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                        {detailsError.message || 'An error occurred'}
-                      </p>
-                      <button
-                        onClick={() => {
-                          setShowDetailModal(false);
-                          setSelectedApplicationId(null);
-                        }}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                      >
-                        Close
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                      <p className="text-gray-600 dark:text-gray-300">Loading application details...</p>
-                    </div>
-                  )}
+          {detailsError ? (
+            // Error modal
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg px-6 py-8 shadow-xl max-w-lg w-full">
+                <div className="text-center">
+                  <div className="text-red-600 dark:text-red-400 mb-4">
+                    <svg className="w-12 h-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </div>
+                  <p className="text-red-600 dark:text-red-400 mb-4">
+                    Failed to load application details
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    {detailsError.message || 'An error occurred'}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowDetailModal(false);
+                      setSelectedApplicationId(null);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             </div>
-          ) : null}
+          ) : isLoadingDetails || !selectedApp || !selectedMetadata ? (
+            // Loading modal
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg px-6 py-8 shadow-xl max-w-lg w-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600 dark:text-gray-300">Loading application details...</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            // Application detail modal
+            <ApplicationDetailModal
+              application={selectedApp}
+              metadata={selectedMetadata}
+              isOpen={showDetailModal}
+              onClose={() => {
+                setShowDetailModal(false);
+                setSelectedApplicationId(null);
+              }}
+              onApprove={handleApprove}
+              onReject={handleReject}
+            />
+          )}
         </>
+      )}
+
+      {/* Reject Modal */}
+      {showRejectModal && selectedApp && selectedMetadata && (
+        <RejectApplicationModal
+          applicationId={selectedApp.applicationId}
+          applicantName={selectedMetadata.personalInfo.fullName}
+          isOpen={showRejectModal}
+          onClose={() => {
+            setShowRejectModal(false);
+            setSelectedApplicationId(null);
+          }}
+          onSuccess={handleSuccess}
+        />
+      )}
+
+      {/* Approve Flow */}
+      {showApproveFlow && selectedApp && selectedMetadata && (
+        <ApproveApplicationFlow
+          application={selectedApp}
+          metadata={selectedMetadata}
+          isOpen={showApproveFlow}
+          onClose={() => {
+            setShowApproveFlow(false);
+            setSelectedApplicationId(null);
+          }}
+          onSuccess={handleSuccess}
+        />
       )}
     </div>
   );
