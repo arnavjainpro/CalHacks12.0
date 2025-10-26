@@ -8,9 +8,10 @@ import { useMyCredential } from '@/lib/hooks/useCredential';
 import {
   usePatientPrescriptionHistory,
   useBatchPrescriptionStatus,
-  useBatchPrescriptionDetails
+  useBatchPrescriptionDetails,
+  type PrescriptionWithMetadata
 } from '@/lib/hooks/usePrescription';
-import { CredentialType, PrescriptionStatus, type Prescription } from '@/lib/contracts/config';
+import { CredentialType, PrescriptionStatus } from '@/lib/contracts/config';
 import { hashPatientData } from '@/lib/utils/crypto';
 import PrescriptionDetails from '@/components/PrescriptionDetails';
 
@@ -19,37 +20,40 @@ interface PrescriptionSummary {
   status: PrescriptionStatus;
 }
 
-interface PrescriptionWithMetadata extends Prescription {
-  metadata?: {
-    medication: string;
-    dosage: string;
-    quantity: string;
-    refills: number;
-    instructions: string;
-  };
-}
-
 interface PatientLookupProps {
   role: 'doctor' | 'pharmacist';
+}
+
+interface SearchTab {
+  id: number;
+  patientName: string;
+  patientDOB: string;
+  patientID: string;
+  patientHash?: `0x${string}`;
+  hasSearched: boolean;
+  viewMode: 'list' | 'analytics' | 'aiinsights';
+  aiInsights: string;
 }
 
 export default function PatientLookup({ role }: PatientLookupProps) {
   const { isConnected } = useAccount();
   const { credential, isLoading: credentialLoading } = useMyCredential();
 
-  // Form state
-  const [patientName, setPatientName] = useState('');
-  const [patientDOB, setPatientDOB] = useState('');
-  const [patientID, setPatientID] = useState('');
-  const [hasSearched, setHasSearched] = useState(false);
-  const [patientHash, setPatientHash] = useState<`0x${string}` | undefined>();
+  // Multi-search tab state
+  const [tabs, setTabs] = useState<SearchTab[]>([
+    { id: 1, patientName: '', patientDOB: '', patientID: '', hasSearched: false, viewMode: 'list', aiInsights: '' }
+  ]);
+  const [activeTabId, setActiveTabId] = useState(1);
+  const [nextTabId, setNextTabId] = useState(2);
 
-  // Query patient history
+  const activeTab = tabs.find(tab => tab.id === activeTabId)!;
+
+  // Query patient history for active tab
   const {
     prescriptionIds,
     isLoading: historyLoading,
     error: historyError
-  } = usePatientPrescriptionHistory(patientHash);
+  } = usePatientPrescriptionHistory(activeTab.patientHash);
 
   // Get statuses for all prescriptions
   const { statuses, isLoading: statusesLoading } = useBatchPrescriptionStatus(
@@ -57,15 +61,15 @@ export default function PatientLookup({ role }: PatientLookupProps) {
   );
 
   const [prescriptions, setPrescriptions] = useState<PrescriptionSummary[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'analytics' | 'aiinsights'>('list');
-  const [aiInsights, setAiInsights] = useState<string>('');
 
-  // Fetch full prescription details with IPFS CIDs when in analytics mode
+  // Fetch full prescription details with IPFS CIDs when in analytics or AI insights mode
   const {
     prescriptions: fullPrescriptions,
     isLoading: loadingDetails
   } = useBatchPrescriptionDetails(
-    viewMode === 'analytics' ? (prescriptionIds || []) : []
+    (activeTab.viewMode === 'analytics' || activeTab.viewMode === 'aiinsights')
+      ? (prescriptionIds || [])
+      : []
   );
 
   // Combine prescription IDs with their statuses
@@ -83,27 +87,62 @@ export default function PatientLookup({ role }: PatientLookupProps) {
   const isCorrectRole = credential?.credentialType === expectedCredentialType;
   const hasValidCredential = credential?.isActive && BigInt(Date.now()) < credential.expiresAt * 1000n;
 
+  // Helper function to update active tab
+  const updateActiveTab = (updates: Partial<SearchTab>) => {
+    setTabs(tabs.map(tab =>
+      tab.id === activeTabId ? { ...tab, ...updates } : tab
+    ));
+  };
+
+  // Add new search tab
+  const addNewTab = () => {
+    if (tabs.length >= 4) return; // Max 4 tabs
+    const newTab: SearchTab = {
+      id: nextTabId,
+      patientName: '',
+      patientDOB: '',
+      patientID: '',
+      hasSearched: false,
+      viewMode: 'list',
+      aiInsights: ''
+    };
+    setTabs([...tabs, newTab]);
+    setActiveTabId(nextTabId);
+    setNextTabId(nextTabId + 1);
+  };
+
+  // Close tab
+  const closeTab = (tabId: number) => {
+    if (tabs.length === 1) return; // Keep at least one tab
+    const newTabs = tabs.filter(tab => tab.id !== tabId);
+    setTabs(newTabs);
+    if (activeTabId === tabId) {
+      setActiveTabId(newTabs[0].id);
+    }
+  };
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!patientName || !patientDOB || !patientID) {
+    if (!activeTab.patientName || !activeTab.patientDOB || !activeTab.patientID) {
       return;
     }
 
     // Hash patient data
-    const hash = hashPatientData(patientName, patientDOB, patientID);
-    setPatientHash(hash);
-    setHasSearched(true);
+    const hash = hashPatientData(activeTab.patientName, activeTab.patientDOB, activeTab.patientID);
+    updateActiveTab({ patientHash: hash, hasSearched: true });
   };
 
   const handleReset = () => {
-    setPatientName('');
-    setPatientDOB('');
-    setPatientID('');
-    setPatientHash(undefined);
-    setHasSearched(false);
+    updateActiveTab({
+      patientName: '',
+      patientDOB: '',
+      patientID: '',
+      patientHash: undefined,
+      hasSearched: false,
+      viewMode: 'list',
+      aiInsights: ''
+    });
     setPrescriptions([]);
-    setViewMode('list');
-    setAiInsights('');
   };
 
   // Generate AI insights about the patient with comprehensive analysis
@@ -111,10 +150,19 @@ export default function PatientLookup({ role }: PatientLookupProps) {
     if (!fullPrescriptions || fullPrescriptions.length === 0) return;
 
     // Show loading state
-    setAiInsights('## 🤖 AI Analysis Loading...\n\nConnecting to Reka AI for advanced clinical analysis...');
+    updateActiveTab({ aiInsights: '## 🤖 AI Analysis Loading...\n\nConnecting to Reka AI for advanced clinical analysis...' });
 
     // Cast to extended type for metadata access
     const prescriptionsWithMeta = fullPrescriptions as PrescriptionWithMetadata[];
+
+    console.log('[generateAIInsights] Processing prescriptions with metadata:', prescriptionsWithMeta);
+    console.log('[generateAIInsights] Metadata availability:',
+      prescriptionsWithMeta.map(p => ({
+        id: p.prescriptionId.toString(),
+        hasMetadata: !!p.metadata,
+        medication: p.metadata?.medication
+      }))
+    );
 
     // Extract medication data from prescriptions
     const medications: string[] = [];
@@ -137,13 +185,17 @@ export default function PatientLookup({ role }: PatientLookupProps) {
     const totalCount = prescriptionsWithMeta.length;
     const dispensedCount = prescriptionsWithMeta.filter(p => p.status === 1).length;
 
-    // Prepare detailed medication list for AI analysis
+    // Prepare detailed medication list for AI analysis with ALL available data
     const medicationDetails = prescriptionsWithMeta.map(p => ({
       name: p.metadata?.medication || 'Unknown',
       dosage: p.metadata?.dosage || 'Unknown',
+      quantity: p.metadata?.quantity || 'Unknown',
+      refills: p.metadata?.refills || 0,
+      instructions: p.metadata?.instructions || 'No instructions provided',
       status: p.status === 0 ? 'Active' : p.status === 1 ? 'Dispensed' : 'Inactive',
       issued: new Date(Number(p.issuedAt) * 1000).toLocaleDateString(),
       expires: new Date(Number(p.expiresAt) * 1000).toLocaleDateString(),
+      prescriptionId: p.prescriptionId.toString(),
     }));
 
     try {
@@ -154,7 +206,7 @@ export default function PatientLookup({ role }: PatientLookupProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          patientName,
+          patientName: activeTab.patientName,
           medications: medicationDetails,
           activeCount,
           totalCount,
@@ -173,7 +225,7 @@ export default function PatientLookup({ role }: PatientLookupProps) {
         ? '## 🤖 Reka AI Clinical Analysis\n\n**Powered by Advanced Medical AI**\n\n'
         : '## 🤖 Clinical Analysis\n\n**Note:** Using local analysis engine\n\n';
 
-      setAiInsights(aiHeader + result.analysis);
+      updateActiveTab({ aiInsights: aiHeader + result.analysis });
     } catch (error) {
       console.error('Error getting AI analysis:', error);
       // Fall back to the comprehensive local analysis
@@ -185,7 +237,7 @@ export default function PatientLookup({ role }: PatientLookupProps) {
         totalCount,
         dispensedCount
       );
-      setAiInsights(localAnalysis);
+      updateActiveTab({ aiInsights: localAnalysis });
     }
   };
 
@@ -201,7 +253,7 @@ export default function PatientLookup({ role }: PatientLookupProps) {
     // Advanced AI Analysis using comprehensive medication data
     return `## 🤖 Advanced AI-Powered Prescription Analysis
 
-**Patient:** ${patientName}
+**Patient:** ${activeTab.patientName}
 **Analysis Date:** ${new Date().toLocaleDateString()}
 **Powered by:** Advanced Clinical Decision Support AI
 
@@ -249,7 +301,7 @@ ${generateSafetyAlerts(activeMedications, medicationDetails)}
 
 ### 💡 Clinical Decision Support
 
-${generateClinicalDecisionSupport(activeMedications, patientName)}
+${generateClinicalDecisionSupport(activeMedications, activeTab.patientName)}
 
 ### 📈 Trend Analysis
 
@@ -500,7 +552,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
 
   // Parse AI insights and convert markdown to formatted JSX
   const parseAIInsights = (content: string) => {
-    const sections = content.split(/(?=###\s|##\s|#\s)/);
+    // Remove ALL ** markers from the entire content first
+    const cleanContent = content.replace(/\*\*/g, '');
+    const sections = cleanContent.split(/(?=###\s|##\s|#\s)/);
 
     return sections.map((section, sectionIndex) => {
       const lines = section.split('\n');
@@ -510,45 +564,54 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
         // Skip empty lines
         if (!line.trim()) return;
 
+        // Skip lines that are just markdown symbols without content
+        if (line.trim() === '#' || line.trim() === '##' || line.trim() === '###') return;
+
         // Handle headers
         if (line.startsWith('### ')) {
+          const headerText = line.replace(/^###\s/, '').trim();
+          if (!headerText) return; // Skip if header has no text
           elements.push(
             <h3 key={`h3-${sectionIndex}-${lineIndex}`} className="text-xl font-bold text-gray-900 mt-6 mb-3 flex items-center gap-2">
-              {line.replace(/^###\s/, '')}
+              {headerText}
             </h3>
           );
         } else if (line.startsWith('## ')) {
+          const headerText = line.replace(/^##\s/, '').trim();
+          if (!headerText) return; // Skip if header has no text
           elements.push(
             <h2 key={`h2-${sectionIndex}-${lineIndex}`} className="text-2xl font-bold text-gray-900 mt-8 mb-4 border-b-2 border-gray-200 pb-2">
-              {line.replace(/^##\s/, '')}
+              {headerText}
             </h2>
           );
         } else if (line.startsWith('# ')) {
+          const headerText = line.replace(/^#\s/, '').trim();
+          if (!headerText) return; // Skip if header has no text
           elements.push(
             <h2 key={`h1-${sectionIndex}-${lineIndex}`} className="text-2xl font-bold text-gray-900 mt-6 mb-3">
-              {line.replace(/^#\s/, '')}
+              {headerText}
             </h2>
           );
         }
         // Handle list items with numbers
-        else if (/^\d+\.\s/.test(line)) {
-          const content = line.replace(/^\d+\.\s/, '');
+        else if (/^\d+\.\s+/.test(line)) {
+          const content = line.replace(/^\d+\.\s+/, '').trim();
           const formattedContent = formatTextWithBold(content);
           elements.push(
             <div key={`list-${sectionIndex}-${lineIndex}`} className="ml-4 my-3 flex gap-3">
               <span className="text-blue-600 font-bold flex-shrink-0">{line.match(/^\d+/)?.[0]}.</span>
-              <div className="text-gray-700">{formattedContent}</div>
+              <div className="text-gray-700 flex-1">{formattedContent}</div>
             </div>
           );
         }
         // Handle bullet points
         else if (line.startsWith('- ') || line.startsWith('• ')) {
-          const content = line.substring(2);
+          const content = line.substring(2).trim();
           const formattedContent = formatTextWithBold(content);
           elements.push(
             <div key={`bullet-${sectionIndex}-${lineIndex}`} className="ml-6 my-2 flex gap-2">
               <span className="text-blue-500 flex-shrink-0">•</span>
-              <div className="text-gray-700">{formattedContent}</div>
+              <div className="text-gray-700 flex-1">{formattedContent}</div>
             </div>
           );
         }
@@ -575,19 +638,11 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           );
         }
         // Handle italic text
-        else if (line.startsWith('*') && line.endsWith('*') && !line.includes('**')) {
+        else if (line.startsWith('*') && line.endsWith('*')) {
           elements.push(
             <p key={`italic-${sectionIndex}-${lineIndex}`} className="text-sm text-gray-600 italic my-2">
               {line.replace(/\*/g, '')}
             </p>
-          );
-        }
-        // Handle bold headers
-        else if (line.startsWith('**') && line.endsWith('**') && !line.includes(':')) {
-          elements.push(
-            <h4 key={`bold-${sectionIndex}-${lineIndex}`} className="font-bold text-lg text-gray-900 mt-4 mb-2">
-              {line.replace(/\*\*/g, '')}
-            </h4>
           );
         }
         // Regular text
@@ -612,24 +667,21 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
 
   // Helper function to format text with bold markdown
   const formatTextWithBold = (text: string): React.ReactNode => {
-    // Handle bold text marked with **text**
-    const parts = text.split(/(\*\*[^*]+\*\*)/);
+    if (!text) return text;
 
-    return parts.map((part, index) => {
-      if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="font-bold text-gray-900">{part.slice(2, -2)}</strong>;
-      }
-      return part;
-    });
+    // Simply remove all ** markers and render as plain text
+    // This ensures no ** symbols are ever displayed
+    const cleanText = text.replace(/\*\*/g, '');
+    return cleanText;
   };
 
   // Trigger AI insights generation when view changes to AI insights
   useEffect(() => {
-    if (viewMode === 'aiinsights' && !aiInsights && prescriptions.length > 0) {
+    if (activeTab.viewMode === 'aiinsights' && !activeTab.aiInsights && fullPrescriptions.length > 0 && !loadingDetails) {
       generateAIInsights();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewMode, prescriptions]);
+  }, [activeTab.viewMode, fullPrescriptions, loadingDetails]);
 
   const getStatusBadge = (status: PrescriptionStatus) => {
     const badges = {
@@ -684,7 +736,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
   const config = roleConfig[role];
 
   // Show prescription list only in list view (hide in analytics and AI insights)
-  const showPrescriptionList = viewMode === 'list';
+  const showPrescriptionList = activeTab.viewMode === 'list';
 
   // Wallet/credential checks
   if (!isConnected) {
@@ -833,8 +885,56 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
             </div>
           </div>
 
+          {/* Multi-Search Tabs */}
+          <div className="mb-6">
+            <div className="flex items-center gap-2 flex-wrap">
+              {tabs.map((tab, index) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTabId(tab.id)}
+                  className={`group relative px-6 py-3 rounded-t-xl font-medium transition-all ${
+                    tab.id === activeTabId
+                      ? 'bg-white shadow-lg border-2 border-b-0 border-purple-200 text-purple-700 z-10'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-2 border-transparent'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>Search {index + 1}</span>
+                    {tab.hasSearched && tab.patientName && (
+                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded">
+                        {tab.patientName.split(' ')[0]}
+                      </span>
+                    )}
+                    {tabs.length > 1 && (
+                      <span
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          closeTab(tab.id);
+                        }}
+                        className="ml-2 text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                        role="button"
+                        aria-label="Close tab"
+                      >
+                        ✕
+                      </span>
+                    )}
+                  </div>
+                </button>
+              ))}
+
+              {tabs.length < 4 && (
+                <button
+                  onClick={addNewTab}
+                  className="px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 hover:border-purple-400 hover:bg-purple-50 text-gray-600 hover:text-purple-600 transition-all font-medium"
+                >
+                  + Add Search
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Search Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 mb-8 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-none shadow-lg border border-gray-100 dark:border-gray-700 mb-8 overflow-hidden">
             <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Patient Search</h2>
             </div>
@@ -844,8 +944,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Patient Full Name</label>
                   <input
                     type="text"
-                    value={patientName}
-                    onChange={(e) => setPatientName(e.target.value)}
+                    value={activeTab.patientName}
+                    onChange={(e) => updateActiveTab({ patientName: e.target.value })}
                     required
                     className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                     placeholder="John Doe"
@@ -855,8 +955,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Date of Birth</label>
                   <input
                     type="date"
-                    value={patientDOB}
-                    onChange={(e) => setPatientDOB(e.target.value)}
+                    value={activeTab.patientDOB}
+                    onChange={(e) => updateActiveTab({ patientDOB: e.target.value })}
                     required
                     className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                   />
@@ -865,8 +965,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Patient ID / SSN</label>
                   <input
                     type="text"
-                    value={patientID}
-                    onChange={(e) => setPatientID(e.target.value)}
+                    value={activeTab.patientID}
+                    onChange={(e) => updateActiveTab({ patientID: e.target.value })}
                     required
                     className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                     placeholder="Last 4 digits or full ID"
@@ -884,7 +984,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   </svg>
                   <span>Search Patient History</span>
                 </button>
-                {hasSearched && (
+                {activeTab.hasSearched && (
                   <button
                     type="button"
                     onClick={handleReset}
@@ -912,7 +1012,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           </div>
 
           {/* Search Results */}
-          {hasSearched && (
+          {activeTab.hasSearched && (
             <>
               {historyLoading || statusesLoading ? (
                 <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -932,9 +1032,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                     <div className="bg-white rounded-lg shadow mb-6">
                       <nav className="flex border-b border-gray-200">
                         <button
-                          onClick={() => setViewMode('list')}
+                          onClick={() => updateActiveTab({ viewMode: 'list' })}
                           className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
-                            viewMode === 'list'
+                            activeTab.viewMode === 'list'
                               ? 'border-blue-500 text-blue-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
@@ -942,9 +1042,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                           📋 Prescription List
                         </button>
                         <button
-                          onClick={() => setViewMode('analytics')}
+                          onClick={() => updateActiveTab({ viewMode: 'analytics' })}
                           className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
-                            viewMode === 'analytics'
+                            activeTab.viewMode === 'analytics'
                               ? 'border-blue-500 text-blue-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
@@ -952,9 +1052,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                           📊 Analytics Dashboard
                         </button>
                         <button
-                          onClick={() => setViewMode('aiinsights')}
+                          onClick={() => updateActiveTab({ viewMode: 'aiinsights' })}
                           className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
-                            viewMode === 'aiinsights'
+                            activeTab.viewMode === 'aiinsights'
                               ? 'border-blue-500 text-blue-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
@@ -966,7 +1066,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   )}
 
                   {/* Abuse Detection Summary */}
-                  {totalPrescriptions > 0 && viewMode === 'list' && (
+                  {totalPrescriptions > 0 && activeTab.viewMode === 'list' && (
                     <div className="grid md:grid-cols-4 gap-6 mb-8">
                       <div className="bg-white rounded-lg shadow p-6">
                         <div className="text-sm text-gray-600 mb-1">Total Prescriptions</div>
@@ -1001,7 +1101,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   )}
 
                   {/* Analytics Dashboard */}
-                  {viewMode === 'analytics' && (
+                  {activeTab.viewMode === 'analytics' && (
                     <div className="space-y-6">
                       {loadingDetails ? (
                         <div className="bg-white rounded-lg shadow p-8 text-center">
@@ -1016,7 +1116,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                           <div className="bg-white rounded-lg shadow p-6">
                             <h2 className="text-2xl font-bold mb-4">Patient Prescription Analytics</h2>
                             <p className="text-gray-600 mb-4">
-                              Comprehensive visualization of {patientName}'s prescription history
+                              Comprehensive visualization of {activeTab.patientName}'s prescription history
                             </p>
                           </div>
                           <PrescriptionDetails
@@ -1029,13 +1129,13 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   )}
 
                   {/* AI Insights View */}
-                  {viewMode === 'aiinsights' && (
+                  {activeTab.viewMode === 'aiinsights' && (
                     <div className="bg-white rounded-lg shadow-xl">
                       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 rounded-t-lg">
                         <div className="flex items-center justify-between">
                           <div>
                             <h2 className="text-3xl font-bold">🤖 AI-Powered Clinical Analysis</h2>
-                            <p className="text-purple-100 mt-2 text-lg">Advanced insights for {patientName}</p>
+                            <p className="text-purple-100 mt-2 text-lg">Advanced insights for {activeTab.patientName}</p>
                           </div>
                           <div className="bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3">
                             <p className="text-xs text-purple-100 uppercase tracking-wide">Powered by</p>
@@ -1044,9 +1144,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                         </div>
                       </div>
                       <div className="p-8">
-                        {aiInsights ? (
+                        {activeTab.aiInsights ? (
                           <div className="space-y-6">
-                            {parseAIInsights(aiInsights)}
+                            {parseAIInsights(activeTab.aiInsights)}
                           </div>
                         ) : (
                           <div className="text-center py-16">
@@ -1157,7 +1257,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           )}
 
           {/* Initial State */}
-          {!hasSearched && (
+          {!activeTab.hasSearched && (
             <div className="bg-white rounded-lg shadow p-12 text-center">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-bold mb-2">Ready to Search</h3>

@@ -26,9 +26,13 @@ MEDICATIONS:
 ${data.medications.map((med: any) => `
 - ${med.name}
   Dosage: ${med.dosage}
+  Quantity: ${med.quantity || 'N/A'}
+  Refills: ${med.refills || 0}
+  Instructions: ${med.instructions || 'None provided'}
   Status: ${med.status}
   Issued: ${med.issued}
   Expires: ${med.expires}
+  Prescription ID: ${med.prescriptionId || 'N/A'}
 `).join('')}
 
 Please provide:
