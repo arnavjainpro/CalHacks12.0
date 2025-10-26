@@ -6,6 +6,7 @@ import { useAccount } from 'wagmi';
 import { useMyCredential } from '@/lib/hooks/useCredential';
 import { CredentialType } from '@/lib/contracts/config';
 import { motion } from 'framer-motion';
+import { Stethoscope, Pill, User } from 'lucide-react';
 
 // Animation variants for smooth scroll-in effects
 const fadeInUp = {
@@ -301,7 +302,7 @@ export default function Home() {
                     
                     <div className="relative">
                       <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-blue-500/50 group-hover:scale-110 transition-transform duration-300">
-                        <span className="text-4xl" role="img" aria-label="Doctor">👨‍⚕️</span>
+                        <Stethoscope className="w-8 h-8 text-white" />
                       </div>
                       <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-blue-400 transition-colors">For Doctors</h3>
                       <p className="text-gray-400 leading-relaxed mb-6 text-base">
@@ -329,7 +330,7 @@ export default function Home() {
                     
                     <div className="relative">
                       <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-purple-500/50 group-hover:scale-110 transition-transform duration-300">
-                        <span className="text-4xl" role="img" aria-label="Pharmacist">💊</span>
+                        <Pill className="w-8 h-8 text-white" />
                       </div>
                       <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-purple-400 transition-colors">For Pharmacists</h3>
                       <p className="text-gray-400 leading-relaxed mb-6 text-base">
@@ -357,7 +358,7 @@ export default function Home() {
                     
                     <div className="relative">
                       <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-green-500/50 group-hover:scale-110 transition-transform duration-300">
-                        <span className="text-4xl" role="img" aria-label="Patient">🧑‍🦱</span>
+                        <User className="w-8 h-8 text-white" />
                       </div>
                       <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-green-400 transition-colors">For Patients</h3>
                       <p className="text-gray-400 leading-relaxed mb-6 text-base">

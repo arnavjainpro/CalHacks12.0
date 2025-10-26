@@ -13,6 +13,7 @@ import {
   getSpecialtyOptions,
   type CredentialType,
 } from '@/lib/constants/applicationSchema';
+import { Lock, Hourglass, CheckCircle, XCircle, PartyPopper, Stethoscope, Pill } from 'lucide-react';
 
 export default function ApplyPage() {
   const { isConnected } = useAccount();
@@ -133,7 +134,9 @@ export default function ApplyPage() {
           {/* NOT CONNECTED STATE */}
           {!isConnected && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
-              <div className="text-6xl mb-4">🔐</div>
+              <div className="flex justify-center mb-4">
+                <Lock className="w-16 h-16 text-blue-600" />
+              </div>
               <h2 className="text-2xl font-bold mb-4">Connect Your Wallet to Apply</h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
                 You need to connect your Web3 wallet to submit a credential application.
@@ -157,7 +160,9 @@ export default function ApplyPage() {
           {isConnected && application && application.status === ApplicationStatus.Pending && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
               <div className="text-center">
-                <div className="text-6xl mb-4">⏳</div>
+                <div className="flex justify-center mb-4">
+                  <Hourglass className="w-16 h-16 text-yellow-600" />
+                </div>
                 <h2 className="text-2xl font-bold mb-4">Application Under Review</h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
                   Your application is currently being reviewed by our verification team.
@@ -191,7 +196,9 @@ export default function ApplyPage() {
           {isConnected && application && application.status === ApplicationStatus.Approved && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
               <div className="text-center">
-                <div className="text-6xl mb-4">✅</div>
+                <div className="flex justify-center mb-4">
+                  <CheckCircle className="w-16 h-16 text-green-600" />
+                </div>
                 <h2 className="text-2xl font-bold mb-4 text-green-600">Application Approved!</h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
                   Congratulations! Your application has been approved.
@@ -213,7 +220,9 @@ export default function ApplyPage() {
           {isConnected && application && application.status === ApplicationStatus.Rejected && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
               <div className="text-center">
-                <div className="text-6xl mb-4">❌</div>
+                <div className="flex justify-center mb-4">
+                  <XCircle className="w-16 h-16 text-red-600" />
+                </div>
                 <h2 className="text-2xl font-bold mb-4 text-red-600">Application Not Approved</h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
                   Unfortunately, your application was not approved at this time.
@@ -241,7 +250,9 @@ export default function ApplyPage() {
           {isConnected && application && application.status === ApplicationStatus.CredentialIssued && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
               <div className="text-center">
-                <div className="text-6xl mb-4">🎉</div>
+                <div className="flex justify-center mb-4">
+                  <PartyPopper className="w-16 h-16 text-green-600" />
+                </div>
                 <h2 className="text-2xl font-bold mb-4 text-green-600">Credential Issued!</h2>
                 <p className="text-gray-600 dark:text-gray-300 mb-6">
                   Your healthcare provider credential has been successfully issued to your wallet.
@@ -291,7 +302,9 @@ export default function ApplyPage() {
                           : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
                       }`}
                     >
-                      <div className="text-3xl mb-2">🩺</div>
+                      <div className="flex justify-center mb-2">
+                        <Stethoscope className="w-8 h-8 text-blue-600" />
+                      </div>
                       <div className="font-semibold">Doctor</div>
                     </button>
                     <button
@@ -303,7 +316,9 @@ export default function ApplyPage() {
                           : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
                       }`}
                     >
-                      <div className="text-3xl mb-2">💊</div>
+                      <div className="flex justify-center mb-2">
+                        <Pill className="w-8 h-8 text-purple-600" />
+                      </div>
                       <div className="font-semibold">Pharmacist</div>
                     </button>
                   </div>

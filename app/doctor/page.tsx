@@ -7,6 +7,7 @@ import { WalletStatus } from '@/components/WalletStatus';
 import { useMyCredential } from '@/lib/hooks/useCredential';
 import { useMyPrescriptions, useBatchPrescriptionStatus } from '@/lib/hooks/usePrescription';
 import { CredentialType, PrescriptionStatus } from '@/lib/contracts/config';
+import { Stethoscope } from 'lucide-react';
 
 export default function DoctorDashboard() {
   // ✅ BACKEND LOGIC PRESERVED - All hooks and state management remain unchanged
@@ -190,12 +191,12 @@ export default function DoctorDashboard() {
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 bg-blue-600 dark:bg-blue-700 rounded-xl flex items-center justify-center">
-                <span className="text-2xl" role="img" aria-label="Doctor">👨‍⚕️</span>
+                <Stethoscope className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">Doctor Dashboard</h1>
                 <p className="text-gray-600 dark:text-gray-300 mt-1">
-                  Welcome, <span className="font-semibold text-blue-600 dark:text-blue-400">Dr. {credential.specialty}</span> Specialist
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">{credential.specialty}</span>
                 </p>
               </div>
             </div>
