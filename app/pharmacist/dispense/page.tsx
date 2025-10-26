@@ -141,10 +141,10 @@ export default function DispensePrescription() {
   // Show loading state while checking credential
   if (isConnected && isLoadingCredential) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b bg-white dark:bg-gray-800 dark:border-gray-700">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
@@ -152,8 +152,8 @@ export default function DispensePrescription() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="animate-pulse">
               <div className="text-4xl mb-4">🔍</div>
-              <h2 className="text-2xl font-bold mb-2">Checking Credentials...</h2>
-              <p className="text-gray-600">Please wait while we verify your access.</p>
+              <h2 className="text-2xl font-bold mb-2 dark:text-gray-100">Checking Credentials...</h2>
+              <p className="text-gray-600 dark:text-gray-300">Please wait while we verify your access.</p>
             </div>
           </div>
         </main>
@@ -163,8 +163,8 @@ export default function DispensePrescription() {
 
   if (!isConnected || !isPharmacist) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b bg-white dark:bg-gray-800 dark:border-gray-700">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
             <WalletStatus />
@@ -405,13 +405,13 @@ export default function DispensePrescription() {
             {/* Patient History View */}
             {showPatientHistory && (
               <div className="space-y-6">
-                <div className="bg-white rounded-lg shadow p-6">
-                  <h2 className="text-2xl font-bold mb-4">Patient Prescription History</h2>
-                  <p className="text-gray-600 mb-4">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                  <h2 className="text-2xl font-bold mb-4 dark:text-gray-100">Patient Prescription History</h2>
+                  <p className="text-gray-600 dark:text-gray-300 mb-4">
                     Complete prescription history for {metadata.patientName}
                   </p>
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                    <p className="text-sm text-purple-800">
+                  <div className="bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
+                    <p className="text-sm text-purple-800 dark:text-purple-300">
                       <strong>Pharmacist Note:</strong> Review patient's prescription history to check for potential drug interactions, duplicate therapy, or unusual patterns before dispensing.
                     </p>
                   </div>
@@ -423,12 +423,12 @@ export default function DispensePrescription() {
                     patientSecret={undefined}
                   />
                 ) : (
-                  <div className="bg-white rounded-lg shadow p-8 text-center">
-                    <p className="text-gray-600">Loading patient history...</p>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+                    <p className="text-gray-600 dark:text-gray-300">Loading patient history...</p>
                   </div>
                 )}
 
-                <div className="bg-white rounded-lg shadow p-6">
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                   <button
                     onClick={() => setShowPatientHistory(false)}
                     className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
