@@ -335,7 +335,7 @@ export default function ApplyPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                        Phone Number <span className="text-gray-500">(Optional)</span>
+                        Phone Number <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="tel"
