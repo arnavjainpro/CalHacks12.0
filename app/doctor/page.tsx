@@ -196,7 +196,7 @@ export default function DoctorDashboard() {
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">Doctor Dashboard</h1>
                 <p className="text-gray-600 dark:text-gray-300 mt-1">
-                  Welcome, <span className="font-semibold text-blue-600 dark:text-blue-400">Dr. {credential.specialty}</span> Specialist
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">{credential.specialty}</span>
                 </p>
               </div>
             </div>
