@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { motion } from 'framer-motion';
 import { WalletStatus } from '@/components/WalletStatus';
 import { useMyCredential } from '@/lib/hooks/useCredential';
 import { useDispensePrescription, useVerifyPrescription } from '@/lib/hooks/usePrescription';
@@ -13,6 +14,9 @@ import { fetchFromIPFS, PrescriptionMetadata } from '@/lib/utils/ipfs';
 import { deriveEncryptionKey, decryptData, hashPatientData } from '@/lib/utils/crypto';
 import DrugInformationPanel from '@/components/DrugInformationPanel';
 import PrescriptionHistory from '@/components/PrescriptionDetails';
+import AIFraudAlert from '@/components/AIFraudAlert';
+import AIDrugInteractionChecker from '@/components/AIDrugInteractionChecker';
+import AIAdherenceCoach from '@/components/AIAdherenceCoach';
 
 export default function DispensePrescription() {
   const { address, isConnected } = useAccount();
@@ -22,6 +26,10 @@ export default function DispensePrescription() {
   const [step, setStep] = useState<'scan' | 'verify' | 'dispense' | 'success'>('scan');
   const [showDrugInfo, setShowDrugInfo] = useState(false);
   const [showPatientHistory, setShowPatientHistory] = useState(false);
+  const [showAIAnalysis, setShowAIAnalysis] = useState(false);
+  const [fraudCheckPassed, setFraudCheckPassed] = useState(false);
+  const [interactionCheckPassed, setInteractionCheckPassed] = useState(false);
+  const [adherenceCoachingComplete, setAdherenceCoachingComplete] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [qrData, setQrData] = useState<any>(null);
   const [metadata, setMetadata] = useState<PrescriptionMetadata | null>(null);
@@ -49,6 +57,18 @@ export default function DispensePrescription() {
   );
 
   const isPharmacist = credential?.credentialType === CredentialType.Pharmacist;
+
+  // Helper function to calculate patient age from DOB
+  const calculatePatientAge = (dob: string): number => {
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   const handleScan = async (result: string) => {
     try {
@@ -346,13 +366,127 @@ export default function DispensePrescription() {
                 </div>
               )}
 
+              {/* AI Analysis Toggle Button */}
+              {!showAIAnalysis && !showDrugInfo && !showPatientHistory && (
+                <div className="mt-6 mb-6">
+                  <button
+                    onClick={() => setShowAIAnalysis(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-medium shadow-lg flex items-center justify-center gap-3"
+                  >
+                    <span className="text-xl">🤖</span>
+                    <span>Run AI Safety & Compliance Analysis</span>
+                    <span className="text-xl">✨</span>
+                  </button>
+                </div>
+              )}
+
+              {/* AI Analysis Section */}
+              {showAIAnalysis && !showDrugInfo && !showPatientHistory && (
+                <div className="mt-6 space-y-6">
+                  {/* Fraud Detection */}
+                  {!fraudCheckPassed && (
+                    <AIFraudAlert
+                      prescriptionData={{
+                        id: prescriptionData.prescriptionId?.toString(),
+                        medication: metadata.medication,
+                        quantity: parseInt(metadata.quantity),
+                        dosage: metadata.dosage,
+                        daysSupply: 30,
+                        isControlled: metadata.medication.toLowerCase().includes('oxycodone') ||
+                                     metadata.medication.toLowerCase().includes('alprazolam'),
+                        issuedAt: new Date(Number(prescriptionData.issuedAt) * 1000).toISOString(),
+                        doctorId: prescriptionData.doctorTokenId?.toString(),
+                      }}
+                      patientData={{
+                        patientName: metadata.patientName,
+                        patientDOB: metadata.patientDOB,
+                        patientID: metadata.patientID,
+                      }}
+                      onProceed={() => setFraudCheckPassed(true)}
+                      onReject={() => {
+                        setStep('scan');
+                        setShowAIAnalysis(false);
+                      }}
+                    />
+                  )}
+
+                  {/* Drug Interaction Check */}
+                  {fraudCheckPassed && !interactionCheckPassed && (
+                    <AIDrugInteractionChecker
+                      currentMedication={metadata.medication}
+                      dosage={metadata.dosage}
+                      patientAge={calculatePatientAge(metadata.patientDOB)}
+                      onSafetyConfirmed={() => setInteractionCheckPassed(true)}
+                    />
+                  )}
+
+                  {/* Adherence Coaching */}
+                  {fraudCheckPassed && interactionCheckPassed && !adherenceCoachingComplete && (
+                    <AIAdherenceCoach
+                      medication={metadata.medication}
+                      dosage={metadata.dosage}
+                      patientName={metadata.patientName}
+                      patientAge={calculatePatientAge(metadata.patientDOB)}
+                      refills={typeof metadata.refills === 'string' ? parseInt(metadata.refills) : (metadata.refills || 0)}
+                      onCoachingComplete={() => setAdherenceCoachingComplete(true)}
+                    />
+                  )}
+
+                  {/* All AI Checks Complete */}
+                  {fraudCheckPassed && interactionCheckPassed && adherenceCoachingComplete && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="bg-green-50 dark:bg-green-900/20 border-2 border-green-300 dark:border-green-700 rounded-lg p-6"
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-4xl">✅</span>
+                        <div>
+                          <h3 className="text-xl font-bold text-green-800 dark:text-green-200">
+                            All AI Safety Checks Passed
+                          </h3>
+                          <p className="text-sm text-green-700 dark:text-green-300">
+                            Prescription verified and ready for dispensing
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded-lg">
+                          <span className="text-2xl">🔒</span>
+                          <p className="text-xs mt-1 font-semibold">Fraud Check</p>
+                          <p className="text-xs text-green-600 dark:text-green-400">Passed</p>
+                        </div>
+                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded-lg">
+                          <span className="text-2xl">💊</span>
+                          <p className="text-xs mt-1 font-semibold">Drug Safety</p>
+                          <p className="text-xs text-green-600 dark:text-green-400">Verified</p>
+                        </div>
+                        <div className="text-center p-2 bg-white dark:bg-gray-800 rounded-lg">
+                          <span className="text-2xl">🎯</span>
+                          <p className="text-xs mt-1 font-semibold">Adherence Plan</p>
+                          <p className="text-xs text-green-600 dark:text-green-400">Created</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setShowAIAnalysis(false)}
+                        className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition font-medium"
+                      >
+                        Continue to Dispense
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+
               <div className="mt-8">
                 <button
                   onClick={handleDispense}
-                  disabled={!canDispense || isPending}
+                  disabled={!canDispense || isPending || (showAIAnalysis && (!fraudCheckPassed || !interactionCheckPassed || !adherenceCoachingComplete))}
                   className="w-full bg-blue-600 dark:bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
-                  {isPending ? 'Dispensing...' : 'Confirm & Dispense'}
+                  {isPending ? 'Dispensing...' :
+                   showAIAnalysis && (!fraudCheckPassed || !interactionCheckPassed || !adherenceCoachingComplete) ?
+                   'Complete AI Analysis First' : 'Confirm & Dispense'}
                 </button>
               </div>
             </div>
