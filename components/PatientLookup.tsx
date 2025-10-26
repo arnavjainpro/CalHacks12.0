@@ -1067,13 +1067,14 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                         </button>
                         <button
                           onClick={() => updateActiveTab({ viewMode: 'aiinsights' })}
-                          className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors ${
+                          className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
                             activeTab.viewMode === 'aiinsights'
                               ? 'border-blue-500 text-blue-600'
                               : 'border-transparent text-gray-500 hover:text-gray-700'
                           }`}
                         >
-                          🤖 AI Insights
+                          <Bot className="w-4 h-4" />
+                          AI Insights
                         </button>
                       </nav>
                     </div>
@@ -1094,7 +1095,10 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                           {activePrescriptions.length}
                         </div>
                         {hasMultipleActive && (
-                          <div className="text-xs text-orange-600 mt-1">⚠️ Multiple active</div>
+                          <div className="text-xs text-orange-600 mt-1 flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3" />
+                            Multiple active
+                          </div>
                         )}
                       </div>
                       <div className="bg-white rounded-lg shadow p-6">
@@ -1148,7 +1152,10 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                       <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 rounded-t-lg">
                         <div className="flex items-center justify-between">
                           <div>
-                            <h2 className="text-3xl font-bold">🤖 AI-Powered Clinical Analysis</h2>
+                            <h2 className="text-3xl font-bold flex items-center gap-3">
+                              <Bot className="w-8 h-8" />
+                              AI-Powered Clinical Analysis
+                            </h2>
                             <p className="text-purple-100 mt-2 text-lg">Advanced insights for {activeTab.patientName}</p>
                           </div>
                           <div className="bg-white/20 backdrop-blur-sm rounded-lg px-6 py-3">
@@ -1165,7 +1172,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                         ) : (
                           <div className="text-center py-16">
                             <div className="animate-pulse">
-                              <div className="text-6xl mb-6">🤖</div>
+                              <div className="flex justify-center mb-6">
+                                <Bot className="w-16 h-16 text-purple-600" />
+                              </div>
                               <p className="text-xl text-gray-600 font-medium">Analyzing prescriptions with Reka AI...</p>
                               <p className="text-sm text-gray-500 mt-2">This may take a few moments</p>
                             </div>
