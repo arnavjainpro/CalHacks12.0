@@ -877,8 +877,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Patient Prescription Lookup</h1>
-                <p className="text-gray-600 mt-1">
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">Patient Prescription Lookup</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">
                   Search for a patient's prescription history to detect potential prescription abuse
                 </p>
               </div>
