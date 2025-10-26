@@ -101,7 +101,9 @@ export default function ApplicationStatusPage() {
           {isConnected && application && application.status === ApplicationStatus.Pending && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
               <div className="text-center mb-6">
-                <div className="text-6xl mb-4">⏳</div>
+                <div className="flex justify-center mb-4">
+                  <Hourglass className="w-16 h-16 text-yellow-600" />
+                </div>
                 <h2 className="text-2xl font-bold mb-2">Application Under Review</h2>
                 <p className="text-yellow-600 font-semibold">Status: Pending Review</p>
               </div>
@@ -148,7 +150,9 @@ export default function ApplicationStatusPage() {
           {isConnected && application && application.status === ApplicationStatus.Approved && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
               <div className="text-center mb-6">
-                <div className="text-6xl mb-4">✅</div>
+                <div className="flex justify-center mb-4">
+                  <CheckCircle className="w-16 h-16 text-green-600" />
+                </div>
                 <h2 className="text-2xl font-bold mb-2 text-green-600">Application Approved!</h2>
                 <p className="text-green-600 font-semibold">Status: Approved</p>
               </div>
@@ -192,7 +196,9 @@ export default function ApplicationStatusPage() {
           {isConnected && application && application.status === ApplicationStatus.Rejected && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
               <div className="text-center mb-6">
-                <div className="text-6xl mb-4">❌</div>
+                <div className="flex justify-center mb-4">
+                  <XCircle className="w-16 h-16 text-red-600" />
+                </div>
                 <h2 className="text-2xl font-bold mb-2 text-red-600">Application Not Approved</h2>
                 <p className="text-red-600 font-semibold">Status: Rejected</p>
               </div>
@@ -239,7 +245,9 @@ export default function ApplicationStatusPage() {
           {isConnected && application && application.status === ApplicationStatus.CredentialIssued && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
               <div className="text-center mb-6">
-                <div className="text-6xl mb-4">🎉</div>
+                <div className="flex justify-center mb-4">
+                  <PartyPopper className="w-16 h-16 text-green-600" />
+                </div>
                 <h2 className="text-2xl font-bold mb-2 text-green-600">Credential Issued!</h2>
                 <p className="text-green-600 font-semibold">Status: Active</p>
               </div>

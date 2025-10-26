@@ -14,6 +14,18 @@ import {
 import { CredentialType, PrescriptionStatus } from '@/lib/contracts/config';
 import { hashPatientData } from '@/lib/utils/crypto';
 import PrescriptionDetails from '@/components/PrescriptionDetails';
+import {
+  Search,
+  ClipboardList,
+  BarChart3,
+  Bot,
+  AlertTriangle,
+  CheckCircle,
+  Circle,
+  TrendingUp,
+  TrendingDown,
+  ArrowRight
+} from 'lucide-react';
 
 interface PrescriptionSummary {
   id: bigint;
