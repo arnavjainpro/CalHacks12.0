@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@base-org/account": "^2.4.0",
+    "@base-org/account-ui": "^1.0.1",
     "@coinbase/onchainkit": "latest",
     "@pinata/sdk": "^2.1.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
