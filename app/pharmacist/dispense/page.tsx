@@ -129,10 +129,10 @@ export default function DispensePrescription() {
   // Show loading state while checking credential
   if (isConnected && isLoadingCredential) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
@@ -140,7 +140,7 @@ export default function DispensePrescription() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="animate-pulse">
               <div className="text-4xl mb-4">🔍</div>
-              <h2 className="text-2xl font-bold mb-2">Checking Credentials...</h2>
+              <h2 className="text-2xl font-bold mb-2 dark:text-gray-100">Checking Credentials...</h2>
               <p className="text-gray-600 dark:text-gray-300">Please wait while we verify your access.</p>
             </div>
           </div>
@@ -151,17 +151,17 @@ export default function DispensePrescription() {
 
   if (!isConnected || !isPharmacist) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4 text-red-600">Access Denied</h2>
-            <p className="text-gray-600 mb-4">You need a valid Pharmacist credential to dispense prescriptions.</p>
+            <h2 className="text-3xl font-bold mb-4 text-red-600 dark:text-red-400">Access Denied</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">You need a valid Pharmacist credential to dispense prescriptions.</p>
             {!isConnected && (
               <p className="text-sm text-gray-500 dark:text-gray-400">Please connect your wallet above.</p>
             )}
@@ -178,19 +178,19 @@ export default function DispensePrescription() {
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-              <div className="text-green-600 text-6xl mb-4">✓</div>
-              <h2 className="text-3xl font-bold mb-4">Prescription Dispensed!</h2>
-              <p className="text-gray-600 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+              <div className="text-green-600 dark:text-green-400 text-6xl mb-4">✓</div>
+              <h2 className="text-3xl font-bold mb-4 dark:text-gray-100">Prescription Dispensed!</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-8">
                 The prescription has been successfully marked as dispensed on the blockchain.
               </p>
               <div className="space-y-4">
@@ -202,13 +202,13 @@ export default function DispensePrescription() {
                     setJsonInput('');
                     setError('');
                   }}
-                  className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                  className="w-full bg-purple-600 dark:bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition font-medium"
                 >
                   Scan Another Prescription
                 </button>
                 <Link
                   href="/pharmacist"
-                  className="block w-full bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition font-medium"
+                  className="block w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
                 >
                   Return to Dashboard
                 </Link>
@@ -226,10 +226,10 @@ export default function DispensePrescription() {
     const canDispense = isActive && !isExpired;
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
@@ -238,18 +238,18 @@ export default function DispensePrescription() {
             <div className="mb-4">
               <button
                 onClick={() => setStep('scan')}
-                className="text-purple-600 hover:underline"
+                className="text-purple-600 dark:text-purple-400 hover:underline"
               >
                 ← Scan Different Prescription
               </button>
             </div>
 
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-              <h2 className="text-2xl font-bold mb-6">Prescription Details</h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8">
+              <h2 className="text-2xl font-bold mb-6 dark:text-gray-100">Prescription Details</h2>
 
               {!canDispense && (
-                <div className={`mb-6 p-4 rounded-lg ${isExpired ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'}`}>
-                  <p className={`font-medium ${isExpired ? 'text-red-800' : 'text-yellow-800'}`}>
+                <div className={`mb-6 p-4 rounded-lg ${isExpired ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700' : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700'}`}>
+                  <p className={`font-medium ${isExpired ? 'text-red-800 dark:text-red-200' : 'text-yellow-800 dark:text-yellow-200'}`}>
                     {isExpired ? '⚠️ This prescription has expired' : '⚠️ This prescription cannot be dispensed'}
                   </p>
                 </div>

@@ -144,10 +144,10 @@ export default function CreatePrescription() {
   // Show loading state while checking credential
   if (isConnected && isLoadingCredential) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
@@ -155,7 +155,7 @@ export default function CreatePrescription() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="animate-pulse">
               <div className="text-4xl mb-4">🔍</div>
-              <h2 className="text-2xl font-bold mb-2">Checking Credentials...</h2>
+              <h2 className="text-2xl font-bold mb-2 dark:text-gray-100">Checking Credentials...</h2>
               <p className="text-gray-600 dark:text-gray-300">Please wait while we verify your access.</p>
             </div>
           </div>
@@ -166,17 +166,17 @@ export default function CreatePrescription() {
 
   if (!isConnected || !isDoctor) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4 text-red-600">Access Denied</h2>
-            <p className="text-gray-600 mb-4">You need a valid Doctor credential to create prescriptions.</p>
+            <h2 className="text-3xl font-bold mb-4 text-red-600 dark:text-red-400">Access Denied</h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">You need a valid Doctor credential to create prescriptions.</p>
             {!isConnected && (
               <p className="text-sm text-gray-500 dark:text-gray-400">Please connect your wallet above.</p>
             )}
@@ -193,43 +193,43 @@ export default function CreatePrescription() {
 
   if (step === 'qr') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-        <header className="border-b bg-white">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
         <main className="container mx-auto px-4 py-8">
           <div className="max-w-2xl mx-auto">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8 text-center">
-              <div className="text-green-600 text-6xl mb-4">✓</div>
-              <h2 className="text-3xl font-bold mb-4">Prescription Created!</h2>
-              <p className="text-gray-600 mb-8">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
+              <div className="text-green-600 dark:text-green-400 text-6xl mb-4">✓</div>
+              <h2 className="text-3xl font-bold mb-4 dark:text-gray-100">Prescription Created!</h2>
+              <p className="text-gray-600 dark:text-gray-300 mb-8">
                 Give this QR code to your patient. They can use it to view their prescription and pharmacists can use it to dispense the medication.
               </p>
 
-              <div ref={qrRef} className="flex justify-center mb-8 bg-white dark:bg-gray-800 p-8 rounded-lg inline-block">
+              <div ref={qrRef} className="flex justify-center mb-8 bg-white p-8 rounded-lg inline-block">
                 <QRCodeSVG value={qrData} size={300} level="H" />
               </div>
 
               <div className="space-y-4">
                 <button
                   onClick={downloadQR}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium"
+                  className="w-full bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition font-medium"
                 >
                   Download QR Code
                 </button>
                 <Link
                   href="/doctor"
-                  className="block w-full bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition font-medium"
+                  className="block w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
                 >
                   Return to Dashboard
                 </Link>
               </div>
 
-              <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-left">
-                <p className="text-sm text-yellow-800">
+              <div className="mt-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg text-left">
+                <p className="text-sm text-yellow-800 dark:text-yellow-100">
                   <strong>Important:</strong> Make sure the patient saves this QR code. They will need it to view their prescription and for the pharmacist to dispense it.
                 </p>
               </div>
@@ -241,10 +241,10 @@ export default function CreatePrescription() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <header className="border-b bg-white">
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+          <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
           <WalletStatus />
         </div>
       </header>
@@ -252,91 +252,91 @@ export default function CreatePrescription() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
-            <Link href="/doctor" className="text-blue-600 hover:underline mb-4 inline-block">
+            <Link href="/doctor" className="text-blue-600 dark:text-blue-400 hover:underline mb-4 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-4xl font-bold">Create Prescription</h1>
+            <h1 className="text-4xl font-bold dark:text-gray-100">Create Prescription</h1>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow p-8">
+          <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-8">
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-semibold mb-4">Patient Information</h3>
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Patient Information</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Full Name</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Full Name</label>
                     <input
                       type="text"
                       value={patientName}
                       onChange={(e) => setPatientName(e.target.value)}
                       required
-                      className="w-full border rounded-lg px-4 py-2"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                       placeholder="John Doe"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Date of Birth</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Date of Birth</label>
                     <input
                       type="date"
                       value={patientDOB}
                       onChange={(e) => setPatientDOB(e.target.value)}
                       required
-                      className="w-full border rounded-lg px-4 py-2"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Patient ID / SSN</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Patient ID / SSN</label>
                     <input
                       type="text"
                       value={patientID}
                       onChange={(e) => setPatientID(e.target.value)}
                       required
-                      className="w-full border rounded-lg px-4 py-2"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                       placeholder="Patient identifier"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-4">Prescription Details</h3>
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                <h3 className="text-lg font-semibold mb-4 dark:text-gray-100">Prescription Details</h3>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium mb-2">Medication</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Medication</label>
                     <input
                       type="text"
                       value={medication}
                       onChange={(e) => setMedication(e.target.value)}
                       required
-                      className="w-full border rounded-lg px-4 py-2"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                       placeholder="e.g., Amoxicillin"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Dosage</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Dosage</label>
                     <input
                       type="text"
                       value={dosage}
                       onChange={(e) => setDosage(e.target.value)}
                       required
-                      className="w-full border rounded-lg px-4 py-2"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                       placeholder="e.g., 500mg twice daily"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium mb-2">Quantity</label>
+                      <label className="block text-sm font-medium mb-2 dark:text-gray-300">Quantity</label>
                       <input
                         type="text"
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
                         required
-                        className="w-full border rounded-lg px-4 py-2"
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                         placeholder="e.g., 30 tablets"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Refills</label>
+                      <label className="block text-sm font-medium mb-2 dark:text-gray-300">Refills</label>
                       <input
                         type="number"
                         value={refills}
@@ -344,23 +344,23 @@ export default function CreatePrescription() {
                         required
                         min="0"
                         max="12"
-                        className="w-full border rounded-lg px-4 py-2"
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Instructions</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Instructions</label>
                     <textarea
                       value={instructions}
                       onChange={(e) => setInstructions(e.target.value)}
                       required
                       rows={4}
-                      className="w-full border rounded-lg px-4 py-2"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                       placeholder="Special instructions for the patient..."
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-2">Valid For (Days)</label>
+                    <label className="block text-sm font-medium mb-2 dark:text-gray-300">Valid For (Days)</label>
                     <input
                       type="number"
                       value={validityDays}
@@ -368,9 +368,9 @@ export default function CreatePrescription() {
                       required
                       min="1"
                       max="365"
-                      className="w-full border rounded-lg px-4 py-2"
+                      className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       How long this prescription remains valid for dispensing
                     </p>
                   </div>
@@ -378,20 +378,20 @@ export default function CreatePrescription() {
               </div>
 
               {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-800 dark:text-red-200">
                   {error}
                 </div>
               )}
 
-              <div className="border-t pt-6">
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
                 <button
                   type="submit"
                   disabled={isSubmitting || isPending}
-                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition font-medium disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
                 >
                   {isSubmitting || isPending ? 'Creating Prescription...' : 'Create Prescription'}
                 </button>
-                <p className="text-xs text-gray-500 mt-2 text-center">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                   This will create a prescription on the blockchain and generate a QR code for the patient
                 </p>
               </div>
