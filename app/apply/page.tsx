@@ -302,7 +302,9 @@ export default function ApplyPage() {
                           : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
                       }`}
                     >
-                      <div className="text-3xl mb-2">🩺</div>
+                      <div className="flex justify-center mb-2">
+                        <Stethoscope className="w-8 h-8 text-blue-600" />
+                      </div>
                       <div className="font-semibold">Doctor</div>
                     </button>
                     <button
@@ -314,7 +316,9 @@ export default function ApplyPage() {
                           : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
                       }`}
                     >
-                      <div className="text-3xl mb-2">💊</div>
+                      <div className="flex justify-center mb-2">
+                        <Pill className="w-8 h-8 text-purple-600" />
+                      </div>
                       <div className="font-semibold">Pharmacist</div>
                     </button>
                   </div>
