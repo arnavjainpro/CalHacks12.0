@@ -178,7 +178,7 @@ export default function DispensePrescription() {
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
@@ -189,8 +189,8 @@ export default function DispensePrescription() {
           <div className="max-w-2xl mx-auto">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
               <div className="text-green-600 dark:text-green-400 text-6xl mb-4">✓</div>
-              <h2 className="text-3xl font-bold mb-4 dark:text-gray-100">Prescription Dispensed!</h2>
-              <p className="text-gray-600 dark:text-gray-300 mb-8">
+              <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Prescription Dispensed!</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-8">
                 The prescription has been successfully marked as dispensed on the blockchain.
               </p>
               <div className="space-y-4">
@@ -202,7 +202,7 @@ export default function DispensePrescription() {
                     setJsonInput('');
                     setError('');
                   }}
-                  className="w-full bg-purple-600 dark:bg-purple-500 text-white px-6 py-3 rounded-lg hover:bg-purple-700 dark:hover:bg-purple-600 transition font-medium"
+                  className="w-full bg-blue-600 dark:bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition font-medium"
                 >
                   Scan Another Prescription
                 </button>
@@ -226,7 +226,7 @@ export default function DispensePrescription() {
     const canDispense = isActive && !isExpired;
 
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
@@ -238,14 +238,14 @@ export default function DispensePrescription() {
             <div className="mb-4">
               <button
                 onClick={() => setStep('scan')}
-                className="text-purple-600 dark:text-purple-400 hover:underline"
+                className="text-blue-600 dark:text-blue-400 hover:underline"
               >
                 ← Scan Different Prescription
               </button>
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8">
-              <h2 className="text-2xl font-bold mb-6 dark:text-gray-100">Prescription Details</h2>
+              <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Prescription Details</h2>
 
               {!canDispense && (
                 <div className={`mb-6 p-4 rounded-lg ${isExpired ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700' : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700'}`}>
@@ -257,70 +257,70 @@ export default function DispensePrescription() {
 
               <div className="space-y-6">
                 <div>
-                  <h3 className="font-semibold text-lg mb-3">Patient Information</h3>
+                  <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-gray-100">Patient Information</h3>
                   <div className="space-y-2 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                     <div>
                       <span className="text-sm text-gray-600 dark:text-gray-300">Name:</span>
-                      <p className="font-medium">{metadata.patientName}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{metadata.patientName}</p>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600 dark:text-gray-300">Date of Birth:</span>
-                      <p className="font-medium">{metadata.patientDOB}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{metadata.patientDOB}</p>
                     </div>
                     <div>
                       <span className="text-sm text-gray-600 dark:text-gray-300">Patient ID:</span>
-                      <p className="font-medium">{metadata.patientID}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{metadata.patientID}</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-lg mb-3">Medication</h3>
-                  <div className="space-y-2 bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-gray-100">Medication</h3>
+                  <div className="space-y-2 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
                     <div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Drug:</span>
-                      <p className="font-medium text-lg">{metadata.medication}</p>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Drug:</span>
+                      <p className="font-medium text-lg text-gray-900 dark:text-gray-100">{metadata.medication}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Dosage:</span>
-                      <p className="font-medium">{metadata.dosage}</p>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Dosage:</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{metadata.dosage}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Quantity:</span>
-                      <p className="font-medium">{metadata.quantity}</p>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Quantity:</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{metadata.quantity}</p>
                     </div>
                     <div>
-                      <span className="text-sm text-gray-600 dark:text-gray-300">Refills:</span>
-                      <p className="font-medium">{metadata.refills}</p>
+                      <span className="text-sm text-gray-600 dark:text-gray-400">Refills:</span>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{metadata.refills}</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-lg mb-3">Instructions</h3>
+                  <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-gray-100">Instructions</h3>
                   <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                    <p>{metadata.instructions}</p>
+                    <p className="text-gray-900 dark:text-gray-100">{metadata.instructions}</p>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-lg mb-3">Prescription Status</h3>
+                  <h3 className="font-semibold text-lg mb-3 text-gray-900 dark:text-gray-100">Prescription Status</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">Issued:</span>
-                      <span className="font-medium">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
                         {new Date(Number(prescriptionData.issuedAt) * 1000).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">Expires:</span>
-                      <span className="font-medium">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
                         {new Date(Number(prescriptionData.expiresAt) * 1000).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-300">Status:</span>
-                      <span className={`font-medium ${isActive ? 'text-green-600' : 'text-red-600'}`}>
+                      <span className={`font-medium ${isActive ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                         {isActive ? 'Active' : 'Not Active'}
                       </span>
                     </div>
@@ -329,7 +329,7 @@ export default function DispensePrescription() {
               </div>
 
               {error && (
-                <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-800 dark:text-red-200">
                   {error}
                 </div>
               )}
@@ -338,7 +338,7 @@ export default function DispensePrescription() {
                 <button
                   onClick={handleDispense}
                   disabled={!canDispense || isPending}
-                  className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 dark:bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   {isPending ? 'Dispensing...' : 'Confirm & Dispense'}
                 </button>
@@ -351,10 +351,10 @@ export default function DispensePrescription() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <header className="border-b bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+          <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
           <WalletStatus />
         </div>
       </header>
@@ -362,18 +362,18 @@ export default function DispensePrescription() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
-            <Link href="/pharmacist" className="text-purple-600 hover:underline mb-4 inline-block">
+            <Link href="/pharmacist" className="text-blue-600 dark:text-blue-400 hover:underline mb-4 inline-block">
               ← Back to Dashboard
             </Link>
-            <h1 className="text-4xl font-bold">Scan Prescription</h1>
-            <p className="text-gray-600 mt-2">
+            <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">Scan Prescription</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
               Scan the patient's prescription QR code to verify and dispense
             </p>
           </div>
 
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-8">
             <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-4">Scan Prescription</h2>
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Scan Prescription</h2>
 
               {/* Toggle between QR and JSON input */}
               <div className="flex gap-2 mb-4">
@@ -381,8 +381,8 @@ export default function DispensePrescription() {
                   onClick={() => setInputMode('qr')}
                   className={`px-4 py-2 rounded-lg font-medium transition ${
                     inputMode === 'qr'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-blue-600 dark:bg-blue-700 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                   }`}
                 >
                   📷 QR Scanner
@@ -391,8 +391,8 @@ export default function DispensePrescription() {
                   onClick={() => setInputMode('json')}
                   className={`px-4 py-2 rounded-lg font-medium transition ${
                     inputMode === 'json'
-                      ? 'bg-purple-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-blue-600 dark:bg-blue-700 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                   }`}
                 >
                   📋 Paste JSON
@@ -430,12 +430,12 @@ export default function DispensePrescription() {
                   value={jsonInput}
                   onChange={(e) => setJsonInput(e.target.value)}
                   placeholder='{"prescriptionId":"1","patientDataHash":"0x...","prescriptionDataHash":"0x...","patientSecret":"0x..."}'
-                  className="w-full h-48 p-4 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full h-48 p-4 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600 focus:border-blue-500 dark:focus:border-blue-600"
                 />
                 <button
                   onClick={handleJsonSubmit}
                   disabled={!jsonInput.trim()}
-                  className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 dark:bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                 >
                   Verify Prescription
                 </button>
@@ -443,7 +443,7 @@ export default function DispensePrescription() {
             )}
 
             {error && (
-              <div className="mt-6 bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+              <div className="mt-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-800 dark:text-red-200">
                 {error}
               </div>
             )}

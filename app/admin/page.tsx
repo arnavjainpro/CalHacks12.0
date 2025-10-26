@@ -78,16 +78,16 @@ export default function AdminDashboard() {
 
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4">Connect Your Wallet</h2>
+            <h2 className="text-3xl font-bold mb-4 text-gray-900 dark:text-gray-100">Connect Your Wallet</h2>
             <p className="text-gray-600 dark:text-gray-300">Please connect your admin wallet to access the dashboard.</p>
           </div>
         </main>
@@ -96,10 +96,10 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
+          <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
           <WalletStatus />
         </div>
       </header>
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Admin Dashboard</h1>
+            <h1 className="text-4xl font-bold mb-2 text-gray-900 dark:text-gray-100">Admin Dashboard</h1>
             <p className="text-gray-600 dark:text-gray-300">
               Manage credentials and verify healthcare providers
             </p>
@@ -121,31 +121,31 @@ export default function AdminDashboard() {
 
           <div className="grid md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="text-sm text-gray-600 mb-1">Total Credentials Issued</div>
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Credentials Issued</div>
+              <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                 {totalSupply?.toString() || '0'}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="text-sm text-gray-600 mb-1">Admin Address</div>
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Admin Address</div>
               <div className="text-sm font-mono mt-2 text-gray-800 dark:text-gray-200">
                 {address?.slice(0, 6)}...{address?.slice(-4)}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="text-sm text-gray-600 mb-1">Status</div>
-              <div className="text-lg font-bold text-green-600">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Status</div>
+              <div className="text-lg font-bold text-green-600 dark:text-green-400">
                 Active
               </div>
             </div>
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
-            <div className="p-6 border-b flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Issue New Credential</h2>
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Issue New Credential</h2>
               <button
                 onClick={() => setShowIssueForm(!showIssueForm)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                className="bg-blue-600 dark:bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition"
               >
                 {showIssueForm ? 'Cancel' : '+ New Credential'}
               </button>
@@ -155,10 +155,10 @@ export default function AdminDashboard() {
               <div className="p-6">
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold mb-4">Provider Information</h3>
+                    <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Provider Information</h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                           Wallet Address *
                         </label>
                         <input
@@ -166,19 +166,19 @@ export default function AdminDashboard() {
                           value={holderAddress}
                           onChange={(e) => setHolderAddress(e.target.value)}
                           required
-                          className="w-full border rounded-lg px-4 py-2"
+                          className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                           placeholder="0x..."
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                           Credential Type *
                         </label>
                         <select
                           value={credentialType}
                           onChange={(e) => setCredentialType(parseInt(e.target.value) as CredentialType)}
-                          className="w-full border rounded-lg px-4 py-2"
+                          className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                         >
                           <option value={CredentialType.Doctor}>Doctor</option>
                           <option value={CredentialType.Pharmacist}>Pharmacist</option>
@@ -186,7 +186,7 @@ export default function AdminDashboard() {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                           License Number *
                         </label>
                         <input
@@ -194,16 +194,16 @@ export default function AdminDashboard() {
                           value={licenseNumber}
                           onChange={(e) => setLicenseNumber(e.target.value)}
                           required
-                          className="w-full border rounded-lg px-4 py-2"
+                          className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                           placeholder="Medical license number"
                         />
-                        <p className="text-xs text-gray-500 mt-1">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           This will be hashed for privacy
                         </p>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                           Specialty *
                         </label>
                         <input
@@ -211,13 +211,13 @@ export default function AdminDashboard() {
                           value={specialty}
                           onChange={(e) => setSpecialty(e.target.value)}
                           required
-                          className="w-full border rounded-lg px-4 py-2"
+                          className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                           placeholder="e.g., Cardiology, Retail Pharmacy"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                           Institution Name *
                         </label>
                         <input
@@ -225,13 +225,13 @@ export default function AdminDashboard() {
                           value={institutionName}
                           onChange={(e) => setInstitutionName(e.target.value)}
                           required
-                          className="w-full border rounded-lg px-4 py-2"
+                          className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                           placeholder="Hospital or pharmacy name"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-2">
+                        <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                           Validity Period (Years) *
                         </label>
                         <input
@@ -241,7 +241,7 @@ export default function AdminDashboard() {
                           required
                           min="1"
                           max="10"
-                          className="w-full border rounded-lg px-4 py-2"
+                          className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-600"
                         />
                       </div>
                     </div>
@@ -257,11 +257,11 @@ export default function AdminDashboard() {
                     <button
                       type="submit"
                       disabled={isSubmitting || isPending}
-                      className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="w-full bg-blue-600 dark:bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 transition font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
                       {isSubmitting || isPending ? 'Issuing Credential...' : 'Issue Credential'}
                     </button>
-                    <p className="text-xs text-gray-500 mt-2 text-center">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center">
                       This will create a Soul-Bound Token (SBT) that cannot be transferred
                     </p>
                   </div>
@@ -271,17 +271,17 @@ export default function AdminDashboard() {
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
-            <div className="p-6 border-b">
-              <h2 className="text-2xl font-bold">KYC Verification Process</h2>
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">KYC Verification Process</h2>
             </div>
             <div className="p-6">
               <div className="space-y-4">
                 <div className="flex gap-4 items-start">
-                  <div className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">
                     1
                   </div>
                   <div>
-                    <h4 className="font-semibold">Verify Provider Identity</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">Verify Provider Identity</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       Confirm identity documents, medical license, and professional credentials
                     </p>
@@ -289,11 +289,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex gap-4 items-start">
-                  <div className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">
                     2
                   </div>
                   <div>
-                    <h4 className="font-semibold">Upload Documents to IPFS</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">Upload Documents to IPFS</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       Store verification documents securely on IPFS with encryption
                     </p>
@@ -301,11 +301,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex gap-4 items-start">
-                  <div className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">
                     3
                   </div>
                   <div>
-                    <h4 className="font-semibold">Issue Credential on Blockchain</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">Issue Credential on Blockchain</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       Create a Soul-Bound Token that verifies the provider's credentials
                     </p>
@@ -313,11 +313,11 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="flex gap-4 items-start">
-                  <div className="bg-blue-100 text-blue-600 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">
+                  <div className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 font-bold">
                     4
                   </div>
                   <div>
-                    <h4 className="font-semibold">Provider Can Now Access Dashboard</h4>
+                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">Provider Can Now Access Dashboard</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-300">
                       Once verified, providers can create/dispense prescriptions based on their role
                     </p>

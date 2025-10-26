@@ -150,7 +150,7 @@ export default function PatientPortal() {
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200">
+              <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
@@ -175,7 +175,7 @@ export default function PatientPortal() {
                     </div>
                     <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">Patient Information</h3>
                   </div>
-                  <div className="space-y-3 bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200">
+                  <div className="space-y-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-600">
                     <div>
                       <span className="text-sm font-medium text-gray-600 dark:text-gray-300">Name:</span>
                       <p className="font-semibold text-gray-900 dark:text-gray-100 text-lg">{metadata.patientName}</p>
@@ -242,26 +242,26 @@ export default function PatientPortal() {
                     </div>
                     <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">Prescription Details</h3>
                   </div>
-                  <div className="space-y-3 bg-gradient-to-br from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200">
+                  <div className="space-y-3 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-5 rounded-xl border border-gray-200 dark:border-gray-600">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 font-medium">Prescription ID:</span>
-                      <span className="font-bold text-blue-600">#{prescription.prescriptionId.toString()}</span>
+                      <span className="text-gray-600 dark:text-gray-300 font-medium">Prescription ID:</span>
+                      <span className="font-bold text-blue-600 dark:text-blue-400">#{prescription.prescriptionId.toString()}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 font-medium">Issued:</span>
+                      <span className="text-gray-600 dark:text-gray-300 font-medium">Issued:</span>
                       <span className="font-semibold text-gray-900 dark:text-gray-100">
                         {new Date(Number(prescription.issuedAt) * 1000).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-600 font-medium">Expires:</span>
+                      <span className="text-gray-600 dark:text-gray-300 font-medium">Expires:</span>
                       <span className="font-semibold text-gray-900 dark:text-gray-100">
                         {new Date(Number(prescription.expiresAt) * 1000).toLocaleDateString()}
                       </span>
                     </div>
                     {prescription.status === PrescriptionStatus.Dispensed && (
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 font-medium">Dispensed On:</span>
+                        <span className="text-gray-600 dark:text-gray-300 font-medium">Dispensed On:</span>
                         <span className="font-semibold text-gray-900 dark:text-gray-100">
                           {new Date(Number(prescription.dispensedAt) * 1000).toLocaleDateString()}
                         </span>
@@ -372,7 +372,7 @@ export default function PatientPortal() {
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">Patient Portal</h1>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600 dark:text-gray-300 mt-1">
                   Scan your prescription QR code to view details
                 </p>
               </div>
@@ -380,7 +380,7 @@ export default function PatientPortal() {
           </div>
 
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200">
+            <div className="bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -392,7 +392,7 @@ export default function PatientPortal() {
             </div>
             
             <div className="p-6 sm:p-8">
-              <p className="text-gray-600 mb-6">
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Position your prescription QR code within the camera frame to view your prescription details securely
               </p>
 
@@ -432,19 +432,19 @@ export default function PatientPortal() {
               )}
 
               {(isProcessing || isLoading) && (
-                <div className="mt-6 bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 border-2 border-blue-300 rounded-xl p-5" role="status" aria-live="polite">
+                <div className="mt-6 bg-gradient-to-r from-blue-50 to-green-50 dark:from-gray-800 dark:to-gray-900 border-2 border-blue-300 dark:border-blue-700 rounded-xl p-5" role="status" aria-live="polite">
                   <div className="flex items-center gap-3 justify-center">
                     <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-green-500 rounded-full flex items-center justify-center animate-pulse">
                       <svg className="w-5 h-5 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                       </svg>
                     </div>
-                    <p className="text-gray-900 font-medium">Loading prescription...</p>
+                    <p className="text-gray-900 dark:text-gray-100 font-medium">Loading prescription...</p>
                   </div>
                 </div>
               )}
 
-              <div className="mt-8 bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-200 rounded-xl p-5">
+              <div className="mt-8 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-800/30 border-2 border-blue-200 dark:border-blue-700 rounded-xl p-5">
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -468,23 +468,23 @@ export default function PatientPortal() {
               <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-3">
                 <span className="text-white font-bold text-lg">1</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Allow Camera</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Allow Camera</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Grant camera permission when prompted by your browser</p>
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-700 p-5">
-              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-3">
                 <span className="text-white font-bold text-lg">2</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Position QR Code</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Position QR Code</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Center your prescription QR code in the camera view</p>
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-100 dark:border-gray-700 p-5">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mb-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mb-3">
                 <span className="text-white font-bold text-lg">3</span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">View Details</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">View Details</h3>
               <p className="text-sm text-gray-600 dark:text-gray-300">Automatic scan will display your prescription information</p>
             </div>
           </div>

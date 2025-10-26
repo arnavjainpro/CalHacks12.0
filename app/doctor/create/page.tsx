@@ -209,7 +209,7 @@ export default function CreatePrescription() {
                 Give this QR code to your patient. They can use it to view their prescription and pharmacists can use it to dispense the medication.
               </p>
 
-              <div ref={qrRef} className="flex justify-center mb-8 bg-white p-8 rounded-lg inline-block">
+              <div ref={qrRef} className="flex justify-center mb-8 bg-white dark:bg-gray-100 p-8 rounded-lg inline-block">
                 <QRCodeSVG value={qrData} size={300} level="H" />
               </div>
 
