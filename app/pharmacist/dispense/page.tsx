@@ -356,7 +356,6 @@ export default function DispensePrescription() {
                 </button>
               </div>
             </div>
-            )}
 
             {/* Drug Information View */}
             {showDrugInfo && !showPatientHistory && (
