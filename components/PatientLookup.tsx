@@ -584,7 +584,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           const headerText = line.replace(/^###\s/, '').trim();
           if (!headerText) return; // Skip if header has no text
           elements.push(
-            <h3 key={`h3-${sectionIndex}-${lineIndex}`} className="text-xl font-bold text-gray-900 mt-6 mb-3 flex items-center gap-2">
+            <h3 key={`h3-${sectionIndex}-${lineIndex}`} className="text-xl font-bold text-gray-900 dark:text-gray-100 mt-6 mb-3 flex items-center gap-2">
               {headerText}
             </h3>
           );
@@ -592,7 +592,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           const headerText = line.replace(/^##\s/, '').trim();
           if (!headerText) return; // Skip if header has no text
           elements.push(
-            <h2 key={`h2-${sectionIndex}-${lineIndex}`} className="text-2xl font-bold text-gray-900 mt-8 mb-4 border-b-2 border-gray-200 pb-2">
+            <h2 key={`h2-${sectionIndex}-${lineIndex}`} className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-8 mb-4 border-b-2 border-gray-200 dark:border-gray-700 pb-2">
               {headerText}
             </h2>
           );
@@ -777,8 +777,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold mb-3">Connect Your Wallet</h2>
-              <p className="text-gray-600 text-lg">Please connect your wallet to access patient lookup.</p>
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-3">Connect Your Wallet</h2>
+              <p className="text-gray-600 dark:text-gray-200 text-lg">Please connect your wallet to access patient lookup.</p>
             </div>
           </div>
         </main>
@@ -810,7 +810,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </div>
-              <p className="text-gray-600 text-lg font-medium">Loading credential...</p>
+              <p className="text-gray-600 dark:text-gray-200 text-lg font-medium">Loading credential...</p>
             </div>
           </div>
         </main>
@@ -842,8 +842,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                 </svg>
               </div>
-              <h2 className="text-3xl font-bold mb-3 text-red-600">Access Denied</h2>
-              <p className="text-gray-600 text-lg mb-6">
+              <h2 className="text-3xl font-bold mb-3 text-red-600 dark:text-red-400">Access Denied</h2>
+              <p className="text-gray-600 dark:text-gray-200 text-lg mb-6">
                 You need a valid {config.title} credential to access patient lookup.
               </p>
               <Link href="/" className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl font-medium">
@@ -1285,11 +1285,11 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
 
           {/* Initial State */}
           {!activeTab.hasSearched && (
-            <div className="bg-white rounded-lg shadow p-12 text-center">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
               <div className="flex justify-center mb-4">
                 <Search className="w-16 h-16 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-2xl font-bold mb-2">Ready to Search</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Ready to Search</h3>
               <p className="text-gray-600 dark:text-gray-200">
                 Enter patient information above to view their prescription history.
               </p>
