@@ -1,8 +1,9 @@
 import { useAccount, useReadContract, usePublicClient } from 'wagmi';
 import { CONTRACTS, type Prescription, PrescriptionStatus } from '@/lib/contracts/config';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { parseEventLogs } from 'viem';
 import { useSponsoredWrite } from './useSponsoredWrite';
+import { fetchFromIPFS, type PrescriptionMetadata } from '@/lib/utils/ipfs';
 
 /**
  * Hook to create a prescription (doctor only)
@@ -374,5 +375,134 @@ export function usePatientPrescriptionHistory(patientDataHash?: `0x${string}`) {
     isLoading,
     error,
     refetch,
+  };
+}
+
+/**
+ * Hook to get prescription as pharmacist using verification
+ * This requires both patient hash and prescription hash for security
+ */
+export function usePrescriptionAsPharmacist(
+  prescriptionId?: bigint,
+  patientHash?: `0x${string}`,
+  prescriptionHash?: `0x${string}`
+) {
+  const { address } = useAccount();
+
+  const { data: prescription, isLoading, error, refetch } = useReadContract({
+    address: CONTRACTS.PrescriptionRegistry.address,
+    abi: CONTRACTS.PrescriptionRegistry.abi,
+    functionName: 'verifyPrescriptionForDispensing',
+    args: [prescriptionId!, patientHash!, prescriptionHash!],
+    account: address,
+    query: {
+      enabled:
+        !!address &&
+        !!prescriptionId &&
+        !!patientHash &&
+        !!prescriptionHash &&
+        prescriptionId > 0n &&
+        patientHash !== '0x' &&
+        prescriptionHash !== '0x',
+    },
+  });
+
+  return {
+    prescription: prescription as Prescription | undefined,
+    isLoading,
+    error,
+    refetch,
+  };
+}
+
+/**
+ * Extended Prescription type with IPFS metadata
+ */
+export interface PrescriptionWithMetadata extends Prescription {
+  metadata?: PrescriptionMetadata;
+}
+
+/**
+ * Hook to batch get full prescription details by IDs
+ * This is for doctors/pharmacists who have access to patient history
+ * Now fetches IPFS metadata for complete prescription information
+ */
+export function useBatchPrescriptionDetails(prescriptionIds: bigint[]) {
+  const { address } = useAccount();
+  const publicClient = usePublicClient();
+
+  const [prescriptions, setPrescriptions] = useState<PrescriptionWithMetadata[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+
+  // Convert array to string for stable comparison
+  const idsKey = prescriptionIds.map(id => id.toString()).join(',');
+
+  useEffect(() => {
+    const fetchPrescriptions = async () => {
+      if (!prescriptionIds || prescriptionIds.length === 0 || !publicClient || !address) {
+        setPrescriptions([]);
+        return;
+      }
+
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const results = await Promise.all(
+          prescriptionIds.map(async (id) => {
+            try {
+              // Try to read as doctor first
+              const result = await publicClient.readContract({
+                address: CONTRACTS.PrescriptionRegistry.address,
+                abi: CONTRACTS.PrescriptionRegistry.abi,
+                functionName: 'getPrescriptionAsDoctor',
+                args: [id],
+                account: address,
+              });
+              const prescription = result as Prescription;
+
+              // Fetch IPFS metadata if CID exists
+              if (prescription.ipfsCid && prescription.ipfsCid !== '') {
+                try {
+                  console.log(`[useBatchPrescriptionDetails] Fetching IPFS data for CID: ${prescription.ipfsCid}`);
+                  const metadata = await fetchFromIPFS<PrescriptionMetadata>(prescription.ipfsCid);
+                  console.log(`[useBatchPrescriptionDetails] Metadata fetched:`, metadata);
+                  return { ...prescription, metadata } as PrescriptionWithMetadata;
+                } catch (ipfsErr) {
+                  console.warn(`Failed to fetch IPFS data for prescription ${id}:`, ipfsErr);
+                  // Return prescription without metadata if IPFS fetch fails
+                  return prescription as PrescriptionWithMetadata;
+                }
+              }
+
+              return prescription as PrescriptionWithMetadata;
+            } catch (err) {
+              console.warn(`Failed to fetch prescription ${id}:`, err);
+              return null;
+            }
+          })
+        );
+
+        // Filter out failed fetches
+        const validPrescriptions = results.filter((p): p is PrescriptionWithMetadata => p !== null);
+        console.log(`[useBatchPrescriptionDetails] Fetched ${validPrescriptions.length} prescriptions with metadata`);
+        setPrescriptions(validPrescriptions);
+      } catch (err) {
+        console.error('Error fetching prescriptions:', err);
+        setError(err as Error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPrescriptions();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, publicClient, address]); // Use idsKey instead of prescriptionIds array
+
+  return {
+    prescriptions,
+    isLoading,
+    error,
   };
 }
