@@ -251,7 +251,7 @@ contract PrescriptionRegistry is Ownable {
     // ============ Access-Controlled View Functions ============
 
     /**
-     * @dev Doctor can view their own prescription
+     * @dev Any doctor can view any prescription
      * @param prescriptionId The prescription ID
      * @return Prescription struct with all details
      */
@@ -263,9 +263,16 @@ contract PrescriptionRegistry is Ownable {
         Prescription memory rx = prescriptions[prescriptionId];
         require(rx.prescriptionId != 0, "Prescription does not exist");
 
-        // Verify caller is the doctor who issued it
+        // Verify caller is a valid doctor (any doctor can view any prescription)
         uint256 doctorTokenId = credentialSBT.getHolderTokenId(msg.sender);
-        require(rx.doctorTokenId == doctorTokenId, "Not the issuing doctor");
+        require(doctorTokenId != 0, "No credential found");
+        require(
+            credentialSBT.hasValidCredential(
+                msg.sender,
+                MedicalCredentialSBT.CredentialType.Doctor
+            ),
+            "Must be a valid doctor"
+        );
 
         return rx;
     }

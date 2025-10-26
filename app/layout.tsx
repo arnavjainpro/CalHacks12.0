@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Source_Code_Pro } from "next/font/google";
+import { Poppins, Source_Code_Pro } from "next/font/google";
 import { RootProvider } from "./rootProvider";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+const poppins = Poppins({
+  subsets: ['latin'],
+  variable: "--font-poppins",
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
 const sourceCodePro = Source_Code_Pro({
@@ -26,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${sourceCodePro.variable}`}>
+      <body className={`${poppins.variable} ${sourceCodePro.variable}`}>
         <RootProvider>{children}</RootProvider>
       </body>
     </html>

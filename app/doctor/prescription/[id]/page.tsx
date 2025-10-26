@@ -1,26 +1,38 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAccount } from 'wagmi';
+import { QRCodeSVG } from 'qrcode.react';
 import { WalletStatus } from '@/components/WalletStatus';
 import { useMyCredential } from '@/lib/hooks/useCredential';
 import { usePrescriptionAsDoctor } from '@/lib/hooks/usePrescription';
-import { CredentialType, PrescriptionStatus } from '@/lib/contracts/config';
+import { CredentialType, PrescriptionStatus, CONTRACTS, PrescriptionQRData } from '@/lib/contracts/config';
 import { fetchFromIPFS, PrescriptionMetadata } from '@/lib/utils/ipfs';
+import { PdfDownloadButton } from '@/components/PdfDownloadButton';
+import { EmailPrescriptionModal } from '@/components/EmailPrescriptionModal';
+import { PdfPreviewModal } from '@/components/PdfPreviewModal';
+import { PrescriptionPdfData } from '@/lib/utils/pdf';
+import { encodePrescriptionQR } from '@/lib/utils/qr';
+import { decryptData, deriveEncryptionKey } from '@/lib/utils/crypto';
 
 export default function PrescriptionDetails() {
   const params = useParams();
   const prescriptionId = params.id ? BigInt(params.id as string) : undefined;
 
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
   const { credential, isLoading: isLoadingCredential } = useMyCredential();
   const { prescription, isLoading, error } = usePrescriptionAsDoctor(prescriptionId);
 
   const [metadata, setMetadata] = useState<PrescriptionMetadata | null>(null);
   const [metadataError, setMetadataError] = useState('');
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(false);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [qrData, setQrData] = useState<string>('');
+  const [pdfData, setPdfData] = useState<PrescriptionPdfData | null>(null);
+  const qrRef = useRef<HTMLDivElement>(null);
 
   const isDoctor = credential?.credentialType === CredentialType.Doctor;
 
@@ -35,6 +47,37 @@ export default function PrescriptionDetails() {
 
         const ipfsData = await fetchFromIPFS<PrescriptionMetadata>(prescription.ipfsCid);
         setMetadata(ipfsData);
+
+        // Decrypt patient name
+        const encryptionKey = deriveEncryptionKey(prescription.patientSecret);
+        const decryptedName = decryptData(ipfsData.patientName, encryptionKey);
+
+        // Generate QR code data
+        const qrPayload: PrescriptionQRData = {
+          prescriptionId: prescription.prescriptionId.toString(),
+          patientDataHash: prescription.patientDataHash,
+          prescriptionDataHash: prescription.prescriptionDataHash,
+          patientSecret: prescription.patientSecret,
+          registryAddress: CONTRACTS.PrescriptionRegistry.address,
+        };
+        const qrString = encodePrescriptionQR(qrPayload);
+        setQrData(qrString);
+
+        // Prepare PDF data
+        const prescriptionPdfData: PrescriptionPdfData = {
+          prescriptionId: prescription.prescriptionId.toString(),
+          patientName: decryptedName,
+          medication: ipfsData.medication,
+          dosage: ipfsData.dosage,
+          quantity: ipfsData.quantity,
+          refills: ipfsData.refills,
+          instructions: ipfsData.instructions,
+          issuedAt: new Date(Number(prescription.issuedAt) * 1000),
+          expiresAt: new Date(Number(prescription.expiresAt) * 1000),
+          doctorTokenId: prescription.doctorTokenId.toString(),
+          qrCodeDataUrl: '', // Will be generated on demand
+        };
+        setPdfData(prescriptionPdfData);
       } catch (err) {
         console.error('[PrescriptionDetails] Error fetching IPFS metadata:', err);
         setMetadataError((err as Error).message || 'Failed to fetch prescription details from IPFS');
@@ -45,6 +88,41 @@ export default function PrescriptionDetails() {
 
     fetchMetadata();
   }, [prescription]);
+
+  // Convert QR code SVG to data URL for PDF
+  const getQRDataUrl = (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!qrRef.current) {
+        reject(new Error('QR ref not found'));
+        return;
+      }
+
+      const svg = qrRef.current.querySelector('svg');
+      if (!svg) {
+        reject(new Error('QR SVG not found'));
+        return;
+      }
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/png');
+        resolve(dataUrl);
+      };
+
+      img.onerror = () => {
+        reject(new Error('Failed to load QR image'));
+      };
+
+      img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+    });
+  };
 
   useEffect(() => {
     console.log('[PrescriptionDetails] Prescription ID:', prescriptionId?.toString());
@@ -150,15 +228,15 @@ export default function PrescriptionDetails() {
   const getStatusColor = (status: PrescriptionStatus) => {
     switch (status) {
       case PrescriptionStatus.Active:
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
       case PrescriptionStatus.Dispensed:
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
       case PrescriptionStatus.Cancelled:
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
       case PrescriptionStatus.Expired:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
       default:
-        return 'bg-gray-100 dark:bg-gray-700 text-gray-800';
+        return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
     }
   };
 
@@ -384,16 +462,93 @@ export default function PrescriptionDetails() {
             </div>
           </div>
 
+          {/* Hidden QR Code for PDF generation */}
+          {qrData && (
+            <div ref={qrRef} className="hidden">
+              <QRCodeSVG value={qrData} size={300} level="H" />
+            </div>
+          )}
+
           {prescription.status === PrescriptionStatus.Active && !isExpired && (
             <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <h3 className="font-semibold mb-4 text-gray-900 dark:text-gray-100">Actions</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 This prescription is active and can be dispensed by a pharmacist. To cancel it, contact system administration.
               </p>
+
+              {pdfData && address && (
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={() => setIsPdfPreviewOpen(true)}
+                    className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                  >
+                    👁️ Preview PDF
+                  </button>
+                  <PdfDownloadButton
+                    prescriptionData={pdfData}
+                    variant="primary"
+                    getQrDataUrl={getQRDataUrl}
+                  />
+                  <button
+                    onClick={() => setIsEmailModalOpen(true)}
+                    className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-medium"
+                  >
+                    📧 Email to Patient
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Allow PDF/Email for non-active prescriptions too */}
+          {prescription.status !== PrescriptionStatus.Active && pdfData && address && (
+            <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <h3 className="font-semibold mb-4 dark:text-gray-100">Prescription Documents</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                Download or email a copy of this prescription.
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => setIsPdfPreviewOpen(true)}
+                  className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                >
+                  👁️ Preview PDF
+                </button>
+                <PdfDownloadButton
+                  prescriptionData={pdfData}
+                  variant="secondary"
+                  getQrDataUrl={getQRDataUrl}
+                />
+                <button
+                  onClick={() => setIsEmailModalOpen(true)}
+                  className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+                >
+                  📧 Email to Patient
+                </button>
+              </div>
             </div>
           )}
         </div>
       </main>
+
+      {pdfData && address && (
+        <>
+          <EmailPrescriptionModal
+            isOpen={isEmailModalOpen}
+            onClose={() => setIsEmailModalOpen(false)}
+            prescriptionData={pdfData}
+            prescriptionId={prescriptionId?.toString() || ''}
+            doctorAddress={address}
+            getQrDataUrl={getQRDataUrl}
+          />
+          <PdfPreviewModal
+            isOpen={isPdfPreviewOpen}
+            onClose={() => setIsPdfPreviewOpen(false)}
+            prescriptionData={pdfData}
+            getQrDataUrl={getQRDataUrl}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -7,8 +7,7 @@ import { WalletStatus } from '@/components/WalletStatus';
 import { useMyCredential } from '@/lib/hooks/useCredential';
 import {
   usePatientPrescriptionHistory,
-  useBatchPrescriptionStatus,
-  usePrescriptionAsDoctor
+  useBatchPrescriptionStatus
 } from '@/lib/hooks/usePrescription';
 import { CredentialType, PrescriptionStatus } from '@/lib/contracts/config';
 import { hashPatientData } from '@/lib/utils/crypto';
@@ -60,7 +59,7 @@ export default function PatientLookup() {
     }
   }, [prescriptionIds, statuses]);
 
-  const isDoctor = credential?.credentialType === CredentialType.Doctor;
+  const isPharmacist = credential?.credentialType === CredentialType.Pharmacist;
   const hasValidCredential = credential?.isActive && BigInt(Date.now()) < credential.expiresAt * 1000n;
 
   const handleSearch = (e: React.FormEvent) => {
@@ -89,7 +88,10 @@ export default function PatientLookup() {
 
   // Fetch full prescription details for analytics
   const fetchFullPrescriptionDetails = async () => {
-    if (!prescriptionIds || prescriptionIds.length === 0) return;
+    if (!prescriptionIds || prescriptionIds.length === 0) {
+      setFullPrescriptions([]);
+      return;
+    }
 
     setLoadingDetails(true);
     try {
@@ -176,8 +178,10 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
 
   // Trigger details fetch when view changes to analytics
   useEffect(() => {
-    if (viewMode === 'analytics' && fullPrescriptions.length === 0 && prescriptionIds && prescriptionIds.length > 0) {
-      fetchFullPrescriptionDetails();
+    if (viewMode === 'analytics' && fullPrescriptions.length === 0) {
+      if (prescriptionIds && prescriptionIds.length > 0) {
+        fetchFullPrescriptionDetails();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [viewMode]);
@@ -194,7 +198,7 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
       [PrescriptionStatus.Active]: 'bg-green-100 text-green-800',
       [PrescriptionStatus.Dispensed]: 'bg-blue-100 text-blue-800',
       [PrescriptionStatus.Cancelled]: 'bg-red-100 text-red-800',
-      [PrescriptionStatus.Expired]: 'bg-gray-100 dark:bg-gray-700 text-gray-800',
+      [PrescriptionStatus.Expired]: 'bg-gray-100 text-gray-800',
     };
     const labels = {
       [PrescriptionStatus.Active]: 'Active',
@@ -224,17 +228,31 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
   // Wallet/credential checks
   if (!isConnected) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
-            <WalletStatus />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">M</span>
+                </div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">MedChain</span>
+              </Link>
+              <WalletStatus />
+            </div>
           </div>
         </header>
         <main className="container mx-auto px-4 py-16">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4 dark:text-gray-100">Connect Your Wallet</h2>
-            <p className="text-gray-600 dark:text-gray-300">Please connect your wallet to access patient lookup.</p>
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-purple-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h2 className="text-3xl font-bold mb-3">Connect Your Wallet</h2>
+              <p className="text-gray-600 text-lg">Please connect your wallet to access patient lookup.</p>
+            </div>
           </div>
         </main>
       </div>
@@ -243,40 +261,71 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
 
   if (credentialLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
-            <WalletStatus />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">M</span>
+                </div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">MedChain</span>
+              </Link>
+              <WalletStatus />
+            </div>
           </div>
         </header>
         <main className="container mx-auto px-4 py-16">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="text-gray-600 dark:text-gray-300">Loading credential...</p>
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-200 dark:border-gray-700 p-8 sm:p-12 text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-pulse">
+                <svg className="w-10 h-10 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <p className="text-gray-600 text-lg font-medium">Loading credential...</p>
+            </div>
           </div>
         </main>
       </div>
     );
   }
 
-  if (!isDoctor || !hasValidCredential) {
+  if (!isPharmacist || !hasValidCredential) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-          <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
-            <WalletStatus />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+        <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex justify-between items-center">
+              <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">M</span>
+                </div>
+                <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">MedChain</span>
+              </Link>
+              <WalletStatus />
+            </div>
           </div>
         </header>
         <main className="container mx-auto px-4 py-16">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4 text-red-600 dark:text-red-400">Access Denied</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
-              You need a valid Doctor credential to access patient lookup.
-            </p>
-            <Link href="/" className="text-blue-600 dark:text-blue-400 hover:underline">
-              Return to Home
-            </Link>
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-red-200 p-8 sm:p-12 text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-red-100 to-red-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                <svg className="w-10 h-10 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h2 className="text-3xl font-bold mb-3 text-red-600">Access Denied</h2>
+              <p className="text-gray-600 text-lg mb-6">
+                You need a valid Pharmacist credential to access patient lookup.
+              </p>
+              <Link href="/" className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl font-medium">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span>Return to Home</span>
+              </Link>
+            </div>
           </div>
         </main>
       </div>
@@ -284,90 +333,119 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
-          <WalletStatus />
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-blue-50">
+      <header className="sticky top-0 z-50 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900/80 backdrop-blur-md shadow-sm">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex justify-between items-center">
+            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-lg">M</span>
+              </div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">MedChain</span>
+            </Link>
+            <WalletStatus />
+          </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <Link href="/doctor" className="text-blue-600 dark:text-blue-400 hover:underline mb-4 inline-block">
-              ← Back to Dashboard
+      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-10">
+            <Link href="/pharmacist" className="inline-flex items-center gap-2 text-purple-600 hover:text-purple-700 mb-4 transition-colors">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              <span className="font-medium">Back to Dashboard</span>
             </Link>
-            <h1 className="text-4xl font-bold mb-2 dark:text-gray-100">Patient Prescription Lookup</h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Search for a patient's prescription history to detect potential prescription abuse.
-            </p>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">Patient Prescription Lookup</h1>
+                <p className="text-gray-600 mt-1">
+                  Search for a patient's prescription history to detect potential prescription abuse
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* Search Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 mb-8">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-              <h2 className="text-2xl font-bold dark:text-gray-100">Patient Search</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 mb-8 overflow-hidden">
+            <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Patient Search</h2>
             </div>
             <form onSubmit={handleSearch} className="p-6">
               <div className="grid md:grid-cols-3 gap-4 mb-6">
                 <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Patient Full Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Patient Full Name</label>
                   <input
                     type="text"
                     value={patientName}
                     onChange={(e) => setPatientName(e.target.value)}
                     required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                     placeholder="John Doe"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Date of Birth</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Date of Birth</label>
                   <input
                     type="date"
                     value={patientDOB}
                     onChange={(e) => setPatientDOB(e.target.value)}
                     required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 dark:text-gray-300">Patient ID / SSN</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Patient ID / SSN</label>
                   <input
                     type="text"
                     value={patientID}
                     onChange={(e) => setPatientID(e.target.value)}
                     required
-                    className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                     placeholder="Last 4 digits or full ID"
                   />
                 </div>
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <button
                   type="submit"
-                  className="bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition font-medium"
+                  className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl font-semibold"
                 >
-                  Search Patient History
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                  <span>Search Patient History</span>
                 </button>
                 {hasSearched && (
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+                    className="inline-flex items-center gap-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-6 py-3 rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all font-semibold"
                   >
-                    Clear Search
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span>Clear Search</span>
                   </button>
                 )}
               </div>
 
-              <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
-                <p className="text-sm text-blue-800 dark:text-blue-100">
-                  <strong>Privacy Notice:</strong> Patient data is hashed client-side. The blockchain
-                  only stores the hash for verification. Access is logged for compliance.
-                </p>
+              <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900/20 dark:to-cyan-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <p className="text-sm text-blue-900 dark:text-blue-100">
+                    <strong className="font-semibold">Privacy Notice:</strong> Patient data is hashed client-side. The blockchain only stores the hash for verification. Access is logged for compliance.
+                  </p>
+                </div>
               </div>
             </form>
           </div>
@@ -376,13 +454,13 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
           {hasSearched && (
             <>
               {historyLoading || statusesLoading ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-                  <p className="text-gray-600 dark:text-gray-300">Loading prescription history...</p>
+                <div className="bg-white rounded-lg shadow p-8 text-center">
+                  <p className="text-gray-600">Loading prescription history...</p>
                 </div>
               ) : historyError ? (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-8">
-                  <h3 className="text-red-800 dark:text-red-200 font-semibold mb-2">Error Loading History</h3>
-                  <p className="text-red-700 dark:text-red-300">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-8">
+                  <h3 className="text-red-800 font-semibold mb-2">Error Loading History</h3>
+                  <p className="text-red-700">
                     {historyError.message || 'Failed to load prescription history'}
                   </p>
                 </div>
@@ -429,31 +507,31 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
                   {/* Abuse Detection Summary */}
                   {totalPrescriptions > 0 && viewMode === 'list' && (
                     <div className="grid md:grid-cols-4 gap-6 mb-8">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Prescriptions</div>
-                        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
+                      <div className="bg-white rounded-lg shadow p-6">
+                        <div className="text-sm text-gray-600 mb-1">Total Prescriptions</div>
+                        <div className="text-3xl font-bold text-blue-600">
                           {totalPrescriptions}
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Active</div>
-                        <div className={`text-3xl font-bold ${hasMultipleActive ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
+                      <div className="bg-white rounded-lg shadow p-6">
+                        <div className="text-sm text-gray-600 mb-1">Active</div>
+                        <div className={`text-3xl font-bold ${hasMultipleActive ? 'text-orange-600' : 'text-green-600'}`}>
                           {activePrescriptions.length}
                         </div>
                         {hasMultipleActive && (
-                          <div className="text-xs text-orange-600 dark:text-orange-400 mt-1">⚠️ Multiple active</div>
+                          <div className="text-xs text-orange-600 mt-1">⚠️ Multiple active</div>
                         )}
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Dispensed</div>
-                        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                      <div className="bg-white rounded-lg shadow p-6">
+                        <div className="text-sm text-gray-600 mb-1">Dispensed</div>
+                        <div className="text-3xl font-bold text-purple-600">
                           {dispensedCount}
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-6">
-                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Risk Level</div>
+                      <div className="bg-white rounded-lg shadow p-6">
+                        <div className="text-sm text-gray-600 mb-1">Risk Level</div>
                         <div className={`text-2xl font-bold ${
-                          hasMultipleActive || hasHighVolume ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
+                          hasMultipleActive || hasHighVolume ? 'text-red-600' : 'text-green-600'
                         }`}>
                           {hasMultipleActive || hasHighVolume ? 'ELEVATED' : 'NORMAL'}
                         </div>
@@ -554,6 +632,7 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
                   )}
 
                   {/* Prescription List */}
+                  {viewMode === 'list' && (
                   <div className="bg-white rounded-lg shadow">
                     <div className="p-6 border-b">
                       <h2 className="text-2xl font-bold">Prescription History</h2>
@@ -562,14 +641,14 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
                       {prescriptions.length > 0 ? (
                         <>
                           {(hasMultipleActive || hasHighVolume) && (
-                            <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
+                            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                               <div className="flex items-start gap-3">
                                 <div className="text-2xl">⚠️</div>
                                 <div>
-                                  <h4 className="font-semibold text-orange-900 dark:text-orange-100 mb-1">
+                                  <h4 className="font-semibold text-orange-900 mb-1">
                                     Potential Prescription Abuse Detected
                                   </h4>
-                                  <ul className="text-sm text-orange-800 dark:text-orange-200 space-y-1">
+                                  <ul className="text-sm text-orange-800 space-y-1">
                                     {hasMultipleActive && (
                                       <li>• Patient has {activePrescriptions.length} active prescriptions</li>
                                     )}
@@ -577,7 +656,7 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
                                       <li>• High prescription volume ({totalPrescriptions} total)</li>
                                     )}
                                   </ul>
-                                  <p className="text-xs text-orange-700 dark:text-orange-300 mt-2">
+                                  <p className="text-xs text-orange-700 mt-2">
                                     Review prescription history carefully before issuing new prescriptions.
                                   </p>
                                 </div>
@@ -589,14 +668,14 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
                             {prescriptions.map((prescription) => (
                               <div
                                 key={prescription.id.toString()}
-                                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                                className="border rounded-lg p-4 hover:bg-gray-50 transition"
                               >
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <div className="font-medium text-lg dark:text-gray-100">
+                                    <div className="font-medium text-lg">
                                       Prescription #{prescription.id.toString()}
                                     </div>
-                                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                    <div className="text-sm text-gray-600 mt-1">
                                       Click to view full details
                                     </div>
                                   </div>
@@ -607,7 +686,7 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
                                 <div className="mt-4">
                                   <Link
                                     href={`/doctor/prescription/${prescription.id}`}
-                                    className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                                    className="text-blue-600 hover:underline text-sm"
                                   >
                                     View Full Details →
                                   </Link>
@@ -619,14 +698,15 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
                       ) : (
                         <div className="text-center py-12">
                           <div className="text-6xl mb-4">📋</div>
-                          <p className="text-gray-600 dark:text-gray-300 mb-2">No prescriptions found for this patient.</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-gray-600 mb-2">No prescriptions found for this patient.</p>
+                          <p className="text-sm text-gray-500">
                             This patient has no prescription history in the system.
                           </p>
                         </div>
                       )}
                     </div>
                   </div>
+                  )}
                 </>
               )}
             </>
@@ -634,10 +714,10 @@ ${!hasMultipleActive && !hasHighVolume ? `✓ **Normal Prescription Pattern**
 
           {/* Initial State */}
           {!hasSearched && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow border border-gray-200 dark:border-gray-700 p-12 text-center">
+            <div className="bg-white rounded-lg shadow p-12 text-center">
               <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-2xl font-bold mb-2 dark:text-gray-100">Ready to Search</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <h3 className="text-2xl font-bold mb-2">Ready to Search</h3>
+              <p className="text-gray-600">
                 Enter patient information above to view their prescription history.
               </p>
             </div>

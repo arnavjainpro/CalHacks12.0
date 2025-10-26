@@ -1,13 +1,15 @@
-import { useAccount, useReadContract, useWriteContract, usePublicClient } from 'wagmi';
+import { useAccount, useReadContract, usePublicClient } from 'wagmi';
 import { CONTRACTS, type Prescription, PrescriptionStatus } from '@/lib/contracts/config';
 import { useEffect } from 'react';
 import { parseEventLogs } from 'viem';
+import { useSponsoredWrite } from './useSponsoredWrite';
 
 /**
  * Hook to create a prescription (doctor only)
+ * Now with sponsored gas support via Paymaster
  */
 export function useCreatePrescription() {
-  const { writeContractAsync, isPending, error } = useWriteContract();
+  const { writeContractAsync, isPending, error } = useSponsoredWrite();
   const publicClient = usePublicClient();
 
   const createPrescription = async (
@@ -52,7 +54,7 @@ export function useCreatePrescription() {
         throw new Error('PrescriptionCreated event not found in transaction logs');
       }
 
-      const prescriptionId = logs[0].args.prescriptionId as bigint;
+      const prescriptionId = (logs[0] as any).args.prescriptionId as bigint;
       console.log('[useCreatePrescription] Prescription ID:', prescriptionId.toString());
 
       return prescriptionId;
@@ -254,9 +256,10 @@ export function useIsPrescriptionDispensable(
 
 /**
  * Hook to dispense a prescription (pharmacist only)
+ * Now with sponsored gas support via Paymaster
  */
 export function useDispensePrescription() {
-  const { writeContractAsync, isPending, error } = useWriteContract();
+  const { writeContractAsync, isPending, error } = useSponsoredWrite();
 
   const dispensePrescription = async (
     prescriptionId: bigint,
@@ -292,9 +295,10 @@ export function useDispensePrescription() {
 
 /**
  * Hook to cancel a prescription (doctor only)
+ * Now with sponsored gas support via Paymaster
  */
 export function useCancelPrescription() {
-  const { writeContractAsync, isPending, error } = useWriteContract();
+  const { writeContractAsync, isPending, error } = useSponsoredWrite();
 
   const cancelPrescription = async (prescriptionId: bigint, reason: string) => {
     return await writeContractAsync({

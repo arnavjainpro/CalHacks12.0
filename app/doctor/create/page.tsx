@@ -18,6 +18,10 @@ import {
 } from '@/lib/utils/crypto';
 import { uploadPrescriptionToIPFS, PrescriptionMetadata } from '@/lib/utils/ipfs';
 import { encodePrescriptionQR } from '@/lib/utils/qr';
+import { PdfDownloadButton } from '@/components/PdfDownloadButton';
+import { EmailPrescriptionModal } from '@/components/EmailPrescriptionModal';
+import { PdfPreviewModal } from '@/components/PdfPreviewModal';
+import { PrescriptionPdfData } from '@/lib/utils/pdf';
 
 export default function CreatePrescription() {
   const router = useRouter();
@@ -27,6 +31,9 @@ export default function CreatePrescription() {
 
   const [step, setStep] = useState<'form' | 'qr'>('form');
   const [qrData, setQrData] = useState<string>('');
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isPdfPreviewOpen, setIsPdfPreviewOpen] = useState(false);
+  const [pdfData, setPdfData] = useState<PrescriptionPdfData | null>(null);
   const [prescriptionId, setPrescriptionId] = useState<string>('');
   const qrRef = useRef<HTMLDivElement>(null);
 
@@ -106,6 +113,23 @@ export default function CreatePrescription() {
       const qrString = encodePrescriptionQR(qrPayload);
       setQrData(qrString);
       setPrescriptionId(prescriptionIdBigInt.toString());
+
+      // Prepare PDF data for later use
+      const prescriptionPdfData: PrescriptionPdfData = {
+        prescriptionId: prescriptionIdBigInt.toString(),
+        patientName,
+        medication,
+        dosage,
+        quantity,
+        refills: parseInt(refills),
+        instructions,
+        issuedAt: new Date(),
+        expiresAt: new Date(Date.now() + parseInt(validityDays) * 24 * 60 * 60 * 1000),
+        doctorTokenId: address?.slice(0, 10) || 'N/A', // Use wallet address prefix as identifier
+        qrCodeDataUrl: '', // Will be set in the QR step
+      };
+      setPdfData(prescriptionPdfData);
+
       setStep('qr');
     } catch (err: any) {
       console.error('Error creating prescription:', err);
@@ -139,6 +163,41 @@ export default function CreatePrescription() {
     };
 
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+  };
+
+  // Convert QR code SVG to data URL for PDF
+  const getQRDataUrl = (): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      if (!qrRef.current) {
+        reject(new Error('QR ref not found'));
+        return;
+      }
+
+      const svg = qrRef.current.querySelector('svg');
+      if (!svg) {
+        reject(new Error('QR SVG not found'));
+        return;
+      }
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx?.drawImage(img, 0, 0);
+        const dataUrl = canvas.toDataURL('image/png');
+        resolve(dataUrl);
+      };
+
+      img.onerror = () => {
+        reject(new Error('Failed to load QR image'));
+      };
+
+      img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
+    });
   };
 
   // Show loading state while checking credential
@@ -192,6 +251,18 @@ export default function CreatePrescription() {
   }
 
   if (step === 'qr') {
+    // Get complete PDF data with QR code
+    const getPdfDataWithQR = async (): Promise<PrescriptionPdfData | null> => {
+      if (!pdfData) return null;
+      try {
+        const qrDataUrl = await getQRDataUrl();
+        return { ...pdfData, qrCodeDataUrl: qrDataUrl };
+      } catch (error) {
+        console.error('Error getting QR data URL:', error);
+        return null;
+      }
+    };
+
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
         <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -213,13 +284,39 @@ export default function CreatePrescription() {
                 <QRCodeSVG value={qrData} size={300} level="H" />
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-3">
+                {pdfData && (
+                  <button
+                    onClick={() => setIsPdfPreviewOpen(true)}
+                    className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                  >
+                    👁️ Preview PDF
+                  </button>
+                )}
+
                 <button
                   onClick={downloadQR}
                   className="w-full bg-blue-600 dark:bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition font-medium"
                 >
-                  Download QR Code
+                  📱 Download QR Code
                 </button>
+
+                {pdfData && (
+                  <PdfDownloadButton
+                    prescriptionData={pdfData}
+                    className="w-full"
+                    variant="primary"
+                    getQrDataUrl={getQRDataUrl}
+                  />
+                )}
+
+                <button
+                  onClick={() => setIsEmailModalOpen(true)}
+                  className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition font-medium"
+                >
+                  📧 Email to Patient
+                </button>
+
                 <Link
                   href="/doctor"
                   className="block w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
@@ -236,6 +333,25 @@ export default function CreatePrescription() {
             </div>
           </div>
         </main>
+
+        {pdfData && address && (
+          <>
+            <EmailPrescriptionModal
+              isOpen={isEmailModalOpen}
+              onClose={() => setIsEmailModalOpen(false)}
+              prescriptionData={pdfData}
+              prescriptionId={prescriptionId}
+              doctorAddress={address}
+              getQrDataUrl={getQRDataUrl}
+            />
+            <PdfPreviewModal
+              isOpen={isPdfPreviewOpen}
+              onClose={() => setIsPdfPreviewOpen(false)}
+              prescriptionData={pdfData}
+              getQrDataUrl={getQRDataUrl}
+            />
+          </>
+        )}
       </div>
     );
   }

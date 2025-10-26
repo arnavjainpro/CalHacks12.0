@@ -226,7 +226,7 @@ export default function PharmacistDashboard() {
             </div>
           </div>
 
-          {/* Enhanced Action Card */}
+          {/* Enhanced Action Card with Two Buttons */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700 mb-10 overflow-hidden">
             <div className="bg-slate-50 dark:bg-gray-800 px-6 py-5 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center gap-3">

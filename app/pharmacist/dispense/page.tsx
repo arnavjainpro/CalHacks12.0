@@ -10,7 +10,9 @@ import { useDispensePrescription, useVerifyPrescription } from '@/lib/hooks/useP
 import { CredentialType, PrescriptionStatus } from '@/lib/contracts/config';
 import { decodePrescriptionQR } from '@/lib/utils/qr';
 import { fetchFromIPFS, PrescriptionMetadata } from '@/lib/utils/ipfs';
-import { deriveEncryptionKey, decryptData } from '@/lib/utils/crypto';
+import { deriveEncryptionKey, decryptData, hashPatientData } from '@/lib/utils/crypto';
+import DrugInformationPanel from '@/components/DrugInformationPanel';
+import PrescriptionHistory from '@/components/PrescriptionHistory';
 
 export default function DispensePrescription() {
   const { address, isConnected } = useAccount();
@@ -18,10 +20,13 @@ export default function DispensePrescription() {
   const { dispensePrescription, isPending } = useDispensePrescription();
 
   const [step, setStep] = useState<'scan' | 'verify' | 'dispense' | 'success'>('scan');
+  const [showDrugInfo, setShowDrugInfo] = useState(false);
+  const [showPatientHistory, setShowPatientHistory] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [qrData, setQrData] = useState<any>(null);
   const [metadata, setMetadata] = useState<PrescriptionMetadata | null>(null);
   const [error, setError] = useState('');
+  const [patientHistoryData, setPatientHistoryData] = useState<any[]>([]);
   const [inputMode, setInputMode] = useState<'qr' | 'json'>('qr');
   const [jsonInput, setJsonInput] = useState('');
 
@@ -126,13 +131,20 @@ export default function DispensePrescription() {
     }
   };
 
+  // Load patient history - would query blockchain in production
+  const loadPatientHistory = () => {
+    // TODO: Implement actual patient history lookup
+    // For now, pharmacists would need patient hash to query history
+    setPatientHistoryData([]);
+  };
+
   // Show loading state while checking credential
   if (isConnected && isLoadingCredential) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <header className="border-b bg-white">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
@@ -140,8 +152,8 @@ export default function DispensePrescription() {
           <div className="max-w-2xl mx-auto text-center">
             <div className="animate-pulse">
               <div className="text-4xl mb-4">🔍</div>
-              <h2 className="text-2xl font-bold mb-2 dark:text-gray-100">Checking Credentials...</h2>
-              <p className="text-gray-600 dark:text-gray-300">Please wait while we verify your access.</p>
+              <h2 className="text-2xl font-bold mb-2">Checking Credentials...</h2>
+              <p className="text-gray-600">Please wait while we verify your access.</p>
             </div>
           </div>
         </main>
@@ -151,22 +163,22 @@ export default function DispensePrescription() {
 
   if (!isConnected || !isPharmacist) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
-        <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        <header className="border-b bg-white">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center">
-            <h2 className="text-3xl font-bold mb-4 text-red-600 dark:text-red-400">Access Denied</h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">You need a valid Pharmacist credential to dispense prescriptions.</p>
+            <h2 className="text-3xl font-bold mb-4 text-red-600">Access Denied</h2>
+            <p className="text-gray-600 mb-4">You need a valid Pharmacist credential to dispense prescriptions.</p>
             {!isConnected && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">Please connect your wallet above.</p>
+              <p className="text-sm text-gray-500">Please connect your wallet above.</p>
             )}
             {isConnected && !isPharmacist && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500">
                 Your connected wallet ({address?.slice(0, 6)}...{address?.slice(-4)}) does not have a Pharmacist credential.
               </p>
             )}
@@ -181,7 +193,7 @@ export default function DispensePrescription() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
@@ -208,7 +220,7 @@ export default function DispensePrescription() {
                 </button>
                 <Link
                   href="/pharmacist"
-                  className="block w-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-100 px-6 py-3 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+                  className="block w-full bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 transition font-medium"
                 >
                   Return to Dashboard
                 </Link>
@@ -229,12 +241,12 @@ export default function DispensePrescription() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
+            <Link href="/" className="text-2xl font-bold text-blue-600">MedChain</Link>
             <WalletStatus />
           </div>
         </header>
         <main className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-7xl mx-auto">
             <div className="mb-4">
               <button
                 onClick={() => setStep('scan')}
@@ -248,8 +260,8 @@ export default function DispensePrescription() {
               <h2 className="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Prescription Details</h2>
 
               {!canDispense && (
-                <div className={`mb-6 p-4 rounded-lg ${isExpired ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700' : 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700'}`}>
-                  <p className={`font-medium ${isExpired ? 'text-red-800 dark:text-red-200' : 'text-yellow-800 dark:text-yellow-200'}`}>
+                <div className={`mb-6 p-4 rounded-lg ${isExpired ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                  <p className={`font-medium ${isExpired ? 'text-red-800' : 'text-yellow-800'}`}>
                     {isExpired ? '⚠️ This prescription has expired' : '⚠️ This prescription cannot be dispensed'}
                   </p>
                 </div>
@@ -344,6 +356,89 @@ export default function DispensePrescription() {
                 </button>
               </div>
             </div>
+            )}
+
+            {/* Drug Information View */}
+            {showDrugInfo && !showPatientHistory && (
+              <div>
+                <DrugInformationPanel
+                  medication={metadata.medication}
+                  dosage={metadata.dosage}
+                  patientContext={`Patient: ${metadata.patientName} (DOB: ${metadata.patientDOB})`}
+                />
+
+                <div className="mt-6 bg-purple-50 border border-purple-200 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-purple-900 mb-3">Pharmacist Safety Checklist</h3>
+                  <div className="space-y-2">
+                    <label className="flex items-center text-purple-800">
+                      <input type="checkbox" className="mr-3 h-5 w-5" />
+                      <span>Verified patient identity and prescription authenticity</span>
+                    </label>
+                    <label className="flex items-center text-purple-800">
+                      <input type="checkbox" className="mr-3 h-5 w-5" />
+                      <span>Reviewed drug information and potential interactions</span>
+                    </label>
+                    <label className="flex items-center text-purple-800">
+                      <input type="checkbox" className="mr-3 h-5 w-5" />
+                      <span>Confirmed dosage and quantity are appropriate</span>
+                    </label>
+                    <label className="flex items-center text-purple-800">
+                      <input type="checkbox" className="mr-3 h-5 w-5" />
+                      <span>Counseled patient on proper medication use</span>
+                    </label>
+                    <label className="flex items-center text-purple-800">
+                      <input type="checkbox" className="mr-3 h-5 w-5" />
+                      <span>Verified no contraindications or allergies</span>
+                    </label>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-purple-300">
+                    <button
+                      onClick={() => setShowDrugInfo(false)}
+                      className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                    >
+                      Return to Prescription & Dispense
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Patient History View */}
+            {showPatientHistory && (
+              <div className="space-y-6">
+                <div className="bg-white rounded-lg shadow p-6">
+                  <h2 className="text-2xl font-bold mb-4">Patient Prescription History</h2>
+                  <p className="text-gray-600 mb-4">
+                    Complete prescription history for {metadata.patientName}
+                  </p>
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <p className="text-sm text-purple-800">
+                      <strong>Pharmacist Note:</strong> Review patient's prescription history to check for potential drug interactions, duplicate therapy, or unusual patterns before dispensing.
+                    </p>
+                  </div>
+                </div>
+
+                {patientHistoryData.length > 0 ? (
+                  <PrescriptionHistory
+                    prescriptions={patientHistoryData}
+                    patientSecret={undefined}
+                  />
+                ) : (
+                  <div className="bg-white rounded-lg shadow p-8 text-center">
+                    <p className="text-gray-600">Loading patient history...</p>
+                  </div>
+                )}
+
+                <div className="bg-white rounded-lg shadow p-6">
+                  <button
+                    onClick={() => setShowPatientHistory(false)}
+                    className="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition font-medium"
+                  >
+                    Return to Prescription & Dispense
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </main>
       </div>
@@ -399,7 +494,7 @@ export default function DispensePrescription() {
                 </button>
               </div>
 
-              <p className="text-sm text-gray-600 dark:text-gray-300">
+              <p className="text-sm text-gray-600">
                 {inputMode === 'qr'
                   ? 'Position the QR code within the camera frame'
                   : 'Paste the prescription JSON data below'}
@@ -407,7 +502,7 @@ export default function DispensePrescription() {
             </div>
 
             {inputMode === 'qr' ? (
-              <div className="aspect-square max-w-md mx-auto bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+              <div className="aspect-square max-w-md mx-auto bg-gray-100 rounded-lg overflow-hidden">
                 <Scanner
                   onScan={(result) => {
                     if (result && result.length > 0) {
@@ -450,7 +545,7 @@ export default function DispensePrescription() {
 
             {isVerifying && (
               <div className="mt-6 text-center">
-                <p className="text-gray-600 dark:text-gray-300">Verifying prescription on blockchain...</p>
+                <p className="text-gray-600">Verifying prescription on blockchain...</p>
               </div>
             )}
           </div>
