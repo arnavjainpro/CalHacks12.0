@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useAccount } from 'wagmi';
 import { WalletStatus } from '@/components/WalletStatus';
 import { useMyApplication, ApplicationStatus } from '@/lib/hooks/useApplication';
+import { Lock, ClipboardList, Hourglass, CheckCircle, XCircle, PartyPopper } from 'lucide-react';
 
 export default function ApplicationStatusPage() {
   const { isConnected } = useAccount();
