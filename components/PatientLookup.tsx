@@ -600,7 +600,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           const headerText = line.replace(/^#\s/, '').trim();
           if (!headerText) return; // Skip if header has no text
           elements.push(
-            <h2 key={`h1-${sectionIndex}-${lineIndex}`} className="text-2xl font-bold text-gray-900 mt-6 mb-3">
+            <h2 key={`h1-${sectionIndex}-${lineIndex}`} className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-6 mb-3">
               {headerText}
             </h2>
           );
@@ -611,8 +611,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           const formattedContent = formatTextWithBold(content);
           elements.push(
             <div key={`list-${sectionIndex}-${lineIndex}`} className="ml-4 my-3 flex gap-3">
-              <span className="text-blue-600 font-bold flex-shrink-0">{line.match(/^\d+/)?.[0]}.</span>
-              <div className="text-gray-700 flex-1">{formattedContent}</div>
+              <span className="text-blue-600 dark:text-blue-400 font-bold flex-shrink-0">{line.match(/^\d+/)?.[0]}.</span>
+              <div className="text-gray-700 dark:text-gray-200 flex-1">{formattedContent}</div>
             </div>
           );
         }
@@ -622,8 +622,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           const formattedContent = formatTextWithBold(content);
           elements.push(
             <div key={`bullet-${sectionIndex}-${lineIndex}`} className="ml-6 my-2 flex gap-2">
-              <span className="text-blue-500 flex-shrink-0">•</span>
-              <div className="text-gray-700 flex-1">{formattedContent}</div>
+              <span className="text-blue-500 dark:text-blue-400 flex-shrink-0">•</span>
+              <div className="text-gray-700 dark:text-gray-200 flex-1">{formattedContent}</div>
             </div>
           );
         }
@@ -648,13 +648,13 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
         // Handle dividers
         else if (line.startsWith('---')) {
           elements.push(
-            <hr key={`hr-${sectionIndex}-${lineIndex}`} className="my-6 border-gray-300" />
+            <hr key={`hr-${sectionIndex}-${lineIndex}`} className="my-6 border-gray-300 dark:border-gray-600" />
           );
         }
         // Handle italic text
         else if (line.startsWith('*') && line.endsWith('*')) {
           elements.push(
-            <p key={`italic-${sectionIndex}-${lineIndex}`} className="text-sm text-gray-600 italic my-2">
+            <p key={`italic-${sectionIndex}-${lineIndex}`} className="text-sm text-gray-600 dark:text-gray-400 italic my-2">
               {line.replace(/\*/g, '')}
             </p>
           );
@@ -662,7 +662,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
         // Regular text
         else {
           elements.push(
-            <p key={`p-${sectionIndex}-${lineIndex}`} className="text-gray-700 my-2 leading-relaxed">
+            <p key={`p-${sectionIndex}-${lineIndex}`} className="text-gray-700 dark:text-gray-200 my-2 leading-relaxed">
               {formatTextWithBold(line)}
             </p>
           );
@@ -699,10 +699,10 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
 
   const getStatusBadge = (status: PrescriptionStatus) => {
     const badges = {
-      [PrescriptionStatus.Active]: 'bg-green-100 text-green-800',
-      [PrescriptionStatus.Dispensed]: 'bg-blue-100 text-blue-800',
-      [PrescriptionStatus.Cancelled]: 'bg-red-100 text-red-800',
-      [PrescriptionStatus.Expired]: 'bg-gray-100 text-gray-800',
+      [PrescriptionStatus.Active]: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
+      [PrescriptionStatus.Dispensed]: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
+      [PrescriptionStatus.Cancelled]: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+      [PrescriptionStatus.Expired]: 'bg-gray-100 dark:bg-gray-700/30 text-gray-800 dark:text-gray-300',
     };
     const labels = {
       [PrescriptionStatus.Active]: 'Active',
@@ -908,14 +908,14 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   onClick={() => setActiveTabId(tab.id)}
                   className={`group relative px-6 py-3 rounded-t-xl font-medium transition-all ${
                     tab.id === activeTabId
-                      ? 'bg-white shadow-lg border-2 border-b-0 border-purple-200 text-purple-700 z-10'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600 border-2 border-transparent'
+                      ? 'bg-white dark:bg-gray-800 shadow-lg border-2 border-b-0 border-blue-200 dark:border-blue-600 text-blue-700 dark:text-blue-400 z-10'
+                      : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 border-2 border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span>Search {index + 1}</span>
                     {tab.hasSearched && tab.patientName && (
-                      <span className="text-xs bg-purple-100 text-purple-600 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
                         {tab.patientName.split(' ')[0]}
                       </span>
                     )}
@@ -939,7 +939,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
               {tabs.length < 4 && (
                 <button
                   onClick={addNewTab}
-                  className="px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 hover:border-purple-400 hover:bg-purple-50 text-gray-600 hover:text-purple-600 transition-all font-medium"
+                  className="px-4 py-3 rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all font-medium"
                 >
                   + Add Search
                 </button>
@@ -949,7 +949,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
 
           {/* Search Form */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl rounded-tl-none shadow-lg border border-gray-100 dark:border-gray-700 mb-8 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200">
+            <div className="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-gray-800 dark:to-gray-900 px-6 py-5 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Patient Search</h2>
             </div>
             <form onSubmit={handleSearch} className="p-6">
@@ -961,7 +961,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                     value={activeTab.patientName}
                     onChange={(e) => updateActiveTab({ patientName: e.target.value })}
                     required
-                    className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100 rounded-xl px-4 py-3 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/30 transition-all"
                     placeholder="John Doe"
                   />
                 </div>
@@ -972,7 +972,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                     value={activeTab.patientDOB}
                     onChange={(e) => updateActiveTab({ patientDOB: e.target.value })}
                     required
-                    className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100 rounded-xl px-4 py-3 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/30 transition-all"
                   />
                 </div>
                 <div>
@@ -982,7 +982,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                     value={activeTab.patientID}
                     onChange={(e) => updateActiveTab({ patientID: e.target.value })}
                     required
-                    className="w-full border-2 border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                    className="w-full border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 dark:text-gray-100 rounded-xl px-4 py-3 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-2 focus:ring-blue-200 dark:focus:ring-blue-900/30 transition-all"
                     placeholder="Last 4 digits or full ID"
                   />
                 </div>
@@ -1029,8 +1029,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           {activeTab.hasSearched && (
             <>
               {historyLoading || statusesLoading ? (
-                <div className="bg-white rounded-lg shadow p-8 text-center">
-                  <p className="text-gray-600">Loading prescription history...</p>
+                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+                  <p className="text-gray-600 dark:text-gray-200">Loading prescription history...</p>
                 </div>
               ) : historyError ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-8">
@@ -1043,14 +1043,14 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                 <>
                   {/* View Mode Tabs */}
                   {totalPrescriptions > 0 && (
-                    <div className="bg-white rounded-lg shadow mb-6">
-                      <nav className="flex border-b border-gray-200">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                      <nav className="flex border-b border-gray-200 dark:border-gray-700">
                         <button
                           onClick={() => updateActiveTab({ viewMode: 'list' })}
                           className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
                             activeTab.viewMode === 'list'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-gray-500 hover:text-gray-700'
+                              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                           }`}
                         >
                           <ClipboardList className="w-4 h-4" />
@@ -1060,8 +1060,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                           onClick={() => updateActiveTab({ viewMode: 'analytics' })}
                           className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
                             activeTab.viewMode === 'analytics'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-gray-500 hover:text-gray-700'
+                              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                           }`}
                         >
                           <BarChart3 className="w-4 h-4" />
@@ -1071,8 +1071,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                           onClick={() => updateActiveTab({ viewMode: 'aiinsights' })}
                           className={`px-6 py-4 font-medium text-sm border-b-2 transition-colors flex items-center gap-2 ${
                             activeTab.viewMode === 'aiinsights'
-                              ? 'border-blue-500 text-blue-600'
-                              : 'border-transparent text-gray-500 hover:text-gray-700'
+                              ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                              : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                           }`}
                         >
                           <Bot className="w-4 h-4" />
@@ -1085,15 +1085,15 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   {/* Abuse Detection Summary */}
                   {totalPrescriptions > 0 && activeTab.viewMode === 'list' && (
                     <div className="grid md:grid-cols-4 gap-6 mb-8">
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <div className="text-sm text-gray-600 mb-1">Total Prescriptions</div>
-                        <div className="text-3xl font-bold text-blue-600">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Prescriptions</div>
+                        <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
                           {totalPrescriptions}
                         </div>
                       </div>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <div className="text-sm text-gray-600 mb-1">Active</div>
-                        <div className={`text-3xl font-bold ${hasMultipleActive ? 'text-orange-600' : 'text-green-600'}`}>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Active</div>
+                        <div className={`text-3xl font-bold ${hasMultipleActive ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'}`}>
                           {activePrescriptions.length}
                         </div>
                         {hasMultipleActive && (
@@ -1103,16 +1103,16 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                           </div>
                         )}
                       </div>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <div className="text-sm text-gray-600 mb-1">Dispensed</div>
-                        <div className="text-3xl font-bold text-purple-600">
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Dispensed</div>
+                        <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
                           {dispensedCount}
                         </div>
                       </div>
-                      <div className="bg-white rounded-lg shadow p-6">
-                        <div className="text-sm text-gray-600 mb-1">Risk Level</div>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Risk Level</div>
                         <div className={`text-2xl font-bold ${
-                          hasMultipleActive || hasHighVolume ? 'text-red-600' : 'text-green-600'
+                          hasMultipleActive || hasHighVolume ? 'text-red-600 dark:text-red-400' : 'text-green-600 dark:text-green-400'
                         }`}>
                           {hasMultipleActive || hasHighVolume ? 'ELEVATED' : 'NORMAL'}
                         </div>
@@ -1124,18 +1124,18 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                   {activeTab.viewMode === 'analytics' && (
                     <div className="space-y-6">
                       {loadingDetails ? (
-                        <div className="bg-white rounded-lg shadow p-8 text-center">
-                          <p className="text-gray-600">Loading prescription analytics...</p>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+                          <p className="text-gray-600 dark:text-gray-200">Loading prescription analytics...</p>
                         </div>
                       ) : fullPrescriptions.length === 0 ? (
-                        <div className="bg-white rounded-lg shadow p-8 text-center">
-                          <p className="text-gray-600">Click on this tab to load analytics...</p>
+                        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+                          <p className="text-gray-600 dark:text-gray-200">Click on this tab to load analytics...</p>
                         </div>
                       ) : (
                         <>
-                          <div className="bg-white rounded-lg shadow p-6">
-                            <h2 className="text-2xl font-bold mb-4">Patient Prescription Analytics</h2>
-                            <p className="text-gray-600 mb-4">
+                          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                            <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Patient Prescription Analytics</h2>
+                            <p className="text-gray-600 dark:text-gray-300 mb-4">
                               Comprehensive visualization of {activeTab.patientName}'s prescription history
                             </p>
                           </div>
@@ -1150,8 +1150,8 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
 
                   {/* AI Insights View */}
                   {activeTab.viewMode === 'aiinsights' && (
-                    <div className="bg-white rounded-lg shadow-xl">
-                      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-8 rounded-t-lg">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl">
+                      <div className="bg-gradient-to-r from-purple-600 to-blue-600 dark:from-purple-800 dark:to-blue-800 text-white p-8 rounded-t-lg">
                         <div className="flex items-center justify-between">
                           <div>
                             <h2 className="text-3xl font-bold flex items-center gap-3">
@@ -1202,22 +1202,22 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
 
                   {/* Prescription List - Only shown based on role and view mode */}
                   {showPrescriptionList && (
-                  <div className="bg-white rounded-lg shadow">
-                    <div className="p-6 border-b">
-                      <h2 className="text-2xl font-bold">Prescription History</h2>
+                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Prescription History</h2>
                     </div>
                     <div className="p-6">
                       {prescriptions.length > 0 ? (
                         <>
                           {(hasMultipleActive || hasHighVolume) && (
-                            <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                            <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-700 rounded-lg">
                               <div className="flex items-start gap-3">
-                                <AlertTriangle className="w-6 h-6 text-orange-600 flex-shrink-0" />
+                                <AlertTriangle className="w-6 h-6 text-orange-600 dark:text-orange-400 flex-shrink-0" />
                                 <div>
-                                  <h4 className="font-semibold text-orange-900 mb-1">
+                                  <h4 className="font-semibold text-orange-900 dark:text-orange-200 mb-1">
                                     Potential Prescription Abuse Detected
                                   </h4>
-                                  <ul className="text-sm text-orange-800 space-y-1">
+                                  <ul className="text-sm text-orange-800 dark:text-orange-300 space-y-1">
                                     {hasMultipleActive && (
                                       <li>• Patient has {activePrescriptions.length} active prescriptions</li>
                                     )}
@@ -1225,7 +1225,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                                       <li>• High prescription volume ({totalPrescriptions} total)</li>
                                     )}
                                   </ul>
-                                  <p className="text-xs text-orange-700 mt-2">
+                                  <p className="text-xs text-orange-700 dark:text-orange-400 mt-2">
                                     Review prescription history carefully before issuing new prescriptions.
                                   </p>
                                 </div>
@@ -1237,14 +1237,14 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                             {prescriptions.map((prescription) => (
                               <div
                                 key={prescription.id.toString()}
-                                className="border rounded-lg p-4 hover:bg-gray-50 transition"
+                                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition"
                               >
                                 <div className="flex justify-between items-start">
                                   <div>
-                                    <div className="font-medium text-lg">
+                                    <div className="font-medium text-lg text-gray-900 dark:text-gray-100">
                                       Prescription #{prescription.id.toString()}
                                     </div>
-                                    <div className="text-sm text-gray-600 mt-1">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                                       Click to view full details
                                     </div>
                                   </div>
@@ -1255,7 +1255,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                                 <div className="mt-4">
                                   <Link
                                     href={config.prescriptionDetailLink(prescription.id)}
-                                    className="text-blue-600 hover:underline text-sm"
+                                    className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
                                   >
                                     View Full Details →
                                   </Link>
