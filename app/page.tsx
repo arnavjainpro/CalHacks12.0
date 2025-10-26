@@ -241,12 +241,20 @@ export default function Home() {
                       </svg>
                     </div>
                     <h3 className="text-3xl font-bold mb-4 text-white text-center">Credential Verification Required</h3>
-                    <p className="text-lg text-gray-300 mb-4 text-center max-w-2xl mx-auto">
+                    <p className="text-lg text-gray-300 mb-8 text-center max-w-2xl mx-auto">
                       You don't have a verified credential yet. Healthcare providers must undergo KYC verification to access the platform.
                     </p>
-                    <p className="text-sm text-gray-400 text-center">
-                      Please contact an administrator for credential verification
-                    </p>
+                    <div className="flex justify-center">
+                      <Link
+                        href="/apply"
+                        className="group inline-flex items-center gap-3 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 text-white px-10 py-5 rounded-xl font-bold text-lg transition-all hover:scale-105 hover:shadow-2xl hover:shadow-orange-500/50"
+                      >
+                        <span>Apply for Credentials</span>
+                        <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </Link>
+                    </div>
                   </div>
                 </motion.div>
               )}
@@ -528,6 +536,11 @@ export default function Home() {
                 <li>
                   <Link href="/patient" className="text-gray-400 hover:text-white transition-colors text-sm">
                     For Patients
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/apply" className="text-gray-400 hover:text-white transition-colors text-sm">
+                    Apply for Credentials
                   </Link>
                 </li>
                 <li>
