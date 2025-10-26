@@ -191,7 +191,7 @@ export default function DoctorDashboard() {
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-12 h-12 bg-blue-600 dark:bg-blue-700 rounded-xl flex items-center justify-center">
-                <span className="text-2xl" role="img" aria-label="Doctor">👨‍⚕️</span>
+                <Stethoscope className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100">Doctor Dashboard</h1>
