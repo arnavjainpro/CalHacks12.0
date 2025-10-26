@@ -2,11 +2,13 @@
 
 import { createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { createBaseAccountSDK, base } from '@base-org/account';
-import type { BaseAccountSDK } from '@base-org/account';
+
+// Infer the SDK type from the createBaseAccountSDK function
+type BaseAccountSDK = ReturnType<typeof createBaseAccountSDK>;
 
 interface BaseAccountContextType {
   sdk: BaseAccountSDK | null;
-  provider: ReturnType<BaseAccountSDK['getProvider']> | null;
+  provider: any | null; // Provider type varies, using any for flexibility
   isAvailable: boolean;
 }
 

@@ -11,7 +11,7 @@
  * - Run: npx tsx scripts/add-signer.ts
  */
 
-import { createWalletClient, createPublicClient, http, parseAbiItem } from 'viem';
+import { createWalletClient, createPublicClient, http } from 'viem';
 import { baseSepolia } from 'viem/chains';
 import { privateKeyToAccount } from 'viem/accounts';
 import { config } from 'dotenv';

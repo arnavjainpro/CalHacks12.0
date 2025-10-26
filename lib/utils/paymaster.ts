@@ -1,8 +1,21 @@
-import { base } from '@base-org/account';
-import type { BaseAccountSDK } from '@base-org/account';
+import { base, createBaseAccountSDK } from '@base-org/account';
 import { encodeFunctionData, numberToHex, Address } from 'viem';
 
+// Infer the SDK type from the createBaseAccountSDK function
+type BaseAccountSDK = ReturnType<typeof createBaseAccountSDK>;
+
 export const CHAIN_ID = base.constants.CHAIN_IDS.baseSepolia;
+
+/**
+ * Type for wallet capabilities response
+ */
+interface WalletCapabilities {
+  [chainId: number]: {
+    paymasterService?: {
+      supported: boolean;
+    };
+  };
+}
 
 /**
  * Check if the wallet supports paymaster services
@@ -15,7 +28,7 @@ export async function checkPaymasterSupport(
     const capabilities = await provider.request({
       method: 'wallet_getCapabilities',
       params: [address],
-    });
+    }) as WalletCapabilities;
 
     const baseCapabilities = capabilities[CHAIN_ID];
     const isSupported = baseCapabilities?.paymasterService?.supported === true;

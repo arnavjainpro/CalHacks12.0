@@ -11,9 +11,12 @@ import {
 } from '@/lib/utils/paymaster';
 import { Address } from 'viem';
 
-export interface WriteContractParams extends Omit<PrepareCallParams, 'args'> {
+export interface WriteContractParams {
   address: Address;
+  abi: any;
+  functionName: string;
   args: any[];
+  value?: bigint;
 }
 
 /**
@@ -60,7 +63,7 @@ export function useSponsoredWrite() {
             if (hasSupport) {
               console.log('[useSponsoredWrite] Using sponsored transaction');
 
-              // Prepare the call
+              // Prepare the call (convert 'address' to 'to')
               const call = prepareCall({
                 to: params.address,
                 abi: params.abi,
