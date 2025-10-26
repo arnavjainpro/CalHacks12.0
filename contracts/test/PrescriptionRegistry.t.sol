@@ -411,7 +411,7 @@ contract PrescriptionRegistryTest is Test {
         assertEq(rx.prescriptionId, rxId);
     }
 
-    function test_RevertWhen_DoctorAccessesOthersPrescription() external {
+    function test_DoctorCanAccessOthersPrescription() external {
         vm.prank(doctor);
         uint256 rxId = registry.createPrescription(PATIENT_HASH, RX_HASH, IPFS_CID, 30, PATIENT_SECRET);
 
@@ -425,9 +425,11 @@ contract PrescriptionRegistryTest is Test {
             5
         );
 
+        // Other doctor can now access the prescription
         vm.prank(otherDoctor);
-        vm.expectRevert("Not the issuing doctor");
-        registry.getPrescriptionAsDoctor(rxId);
+        PrescriptionRegistry.Prescription memory rx = registry.getPrescriptionAsDoctor(rxId);
+        assertEq(rx.prescriptionId, rxId);
+        assertEq(rx.doctorTokenId, doctorTokenId); // Shows it was issued by the first doctor
     }
 
     function test_AdminCanAccessAnyPrescription() external {
