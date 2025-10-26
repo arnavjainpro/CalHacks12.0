@@ -7,6 +7,7 @@ import { WalletStatus } from '@/components/WalletStatus';
 import { useMyCredential } from '@/lib/hooks/useCredential';
 import { useMyPrescriptions, useBatchPrescriptionStatus } from '@/lib/hooks/usePrescription';
 import { CredentialType, PrescriptionStatus } from '@/lib/contracts/config';
+import { Stethoscope } from 'lucide-react';
 
 export default function DoctorDashboard() {
   // ✅ BACKEND LOGIC PRESERVED - All hooks and state management remain unchanged
