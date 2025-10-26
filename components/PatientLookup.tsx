@@ -162,7 +162,7 @@ export default function PatientLookup({ role }: PatientLookupProps) {
     if (!fullPrescriptions || fullPrescriptions.length === 0) return;
 
     // Show loading state
-    updateActiveTab({ aiInsights: '## 🤖 AI Analysis Loading...\n\nConnecting to Reka AI for advanced clinical analysis...' });
+    updateActiveTab({ aiInsights: '## AI Analysis Loading...\n\nConnecting to Reka AI for advanced clinical analysis...' });
 
     // Cast to extended type for metadata access
     const prescriptionsWithMeta = fullPrescriptions as PrescriptionWithMetadata[];
@@ -234,8 +234,8 @@ export default function PatientLookup({ role }: PatientLookupProps) {
 
       // Check if we got AI analysis or fallback
       const aiHeader = result.isAI
-        ? '## 🤖 Reka AI Clinical Analysis\n\n**Powered by Advanced Medical AI**\n\n'
-        : '## 🤖 Clinical Analysis\n\n**Note:** Using local analysis engine\n\n';
+        ? '## Reka AI Clinical Analysis\n\n**Powered by Advanced Medical AI**\n\n'
+        : '## Clinical Analysis\n\n**Note:** Using local analysis engine\n\n';
 
       updateActiveTab({ aiInsights: aiHeader + result.analysis });
     } catch (error) {
@@ -263,36 +263,36 @@ export default function PatientLookup({ role }: PatientLookupProps) {
     dispensedCount: number
   ): string => {
     // Advanced AI Analysis using comprehensive medication data
-    return `## 🤖 Advanced AI-Powered Prescription Analysis
+    return `## Advanced AI-Powered Prescription Analysis
 
 **Patient:** ${activeTab.patientName}
 **Analysis Date:** ${new Date().toLocaleDateString()}
 **Powered by:** Advanced Clinical Decision Support AI
 
-### 📊 Prescription Overview
+### Prescription Overview
 - **Total Prescriptions:** ${totalCount}
 - **Currently Active:** ${activeCount}
 - **Dispensed:** ${dispensedCount}
-- **Risk Assessment:** ${hasMultipleActive || hasHighVolume ? '⚠️ **HIGH RISK**' : '✅ **LOW RISK**'}
+- **Risk Assessment:** ${hasMultipleActive || hasHighVolume ? '**HIGH RISK**' : '**LOW RISK**'}
 
-### 💊 Active Medications
+### Active Medications
 ${activeMedications.length > 0 ? activeMedications.map(med => `- ${med}`).join('\n') : '- No active medications'}
 
-### ⚠️ Critical Drug Interaction Analysis
+### Critical Drug Interaction Analysis
 
 ${activeMedications.length >= 2 ? `**IMPORTANT:** Multiple active medications detected. Analyzing for interactions...
 
 ${checkCommonInteractions(activeMedications)}` : 'No drug interactions possible (single or no active medication)'}
 
-### 🔍 Detailed Clinical Insights
+### Detailed Clinical Insights
 
 ${generateDetailedInsights(medicationDetails, activeCount, hasMultipleActive, hasHighVolume)}
 
-### 🎯 Personalized Recommendations
+### Personalized Recommendations
 
 ${generatePersonalizedRecommendations(activeMedications, hasMultipleActive, hasHighVolume)}
 
-### 📋 Prescription Details
+### Prescription Details
 ${medicationDetails.map(med => `
 **${med.name}**
 - Dosage: ${med.dosage}
@@ -300,22 +300,22 @@ ${medicationDetails.map(med => `
 - Issued: ${med.issued}
 - Expires: ${med.expires}`).join('\n')}
 
-### 🔬 Advanced Analytics
+### Advanced Analytics
 
-1. **Polypharmacy Risk**: ${activeCount >= 5 ? '⚠️ High (5+ medications)' : activeCount >= 3 ? '⚡ Moderate (3-4 medications)' : '✅ Low (< 3 medications)'}
+1. **Polypharmacy Risk**: ${activeCount >= 5 ? 'HIGH - 5+ medications' : activeCount >= 3 ? 'MODERATE - 3-4 medications' : 'LOW - Less than 3 medications'}
 2. **Adherence Pattern**: ${calculateAdherencePattern(prescriptionsWithMeta)}
 3. **Prescription Velocity**: ${calculatePrescriptionVelocity(prescriptionsWithMeta)}
 4. **Therapeutic Duplication Risk**: ${checkTherapeuticDuplication(activeMedications)}
 
-### 🚨 Safety Alerts
+### Safety Alerts
 
 ${generateSafetyAlerts(activeMedications, medicationDetails)}
 
-### 💡 Clinical Decision Support
+### Clinical Decision Support
 
 ${generateClinicalDecisionSupport(activeMedications, activeTab.patientName)}
 
-### 📈 Trend Analysis
+### Trend Analysis
 
 - **Prescription Frequency Trend**: ${analyzePrescriptionTrend(prescriptionsWithMeta)}
 - **Medication Compliance Score**: ${calculateComplianceScore(prescriptionsWithMeta)}
@@ -351,21 +351,21 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
         const med2 = medications[j];
 
         if (interactions[med1]?.includes(med2)) {
-          foundInteractions.push(`⚠️ **${med1} + ${med2}**: Potential serious interaction`);
+          foundInteractions.push(`**WARNING: ${med1} + ${med2}**: Potential serious interaction`);
         }
       }
     }
 
     return foundInteractions.length > 0
       ? foundInteractions.join('\n')
-      : '✅ No known serious drug interactions detected';
+      : '**CLEAR:** No known serious drug interactions detected';
   };
 
   const generateDetailedInsights = (meds: any[], activeCount: number, multiActive: boolean, highVol: boolean) => {
     const insights = [];
 
     if (multiActive) {
-      insights.push(`⚠️ **Polypharmacy Concern**: Patient has ${activeCount} active prescriptions. This increases risk of:
+      insights.push(`**WARNING - Polypharmacy Concern**: Patient has ${activeCount} active prescriptions. This increases risk of:
    - Drug interactions (risk increases exponentially)
    - Medication errors (wrong drug, wrong time)
    - Reduced adherence (complex regimen)
@@ -373,14 +373,14 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
     }
 
     if (highVol) {
-      insights.push(`📊 **High Prescription Volume Pattern Detected**:
+      insights.push(`**High Prescription Volume Pattern Detected**:
    - May indicate chronic conditions requiring multiple therapies
    - Consider medication therapy management (MTM) review
    - Evaluate for prescription cascade (drugs treating side effects of other drugs)`);
     }
 
     if (activeCount === 0) {
-      insights.push(`✅ **No Active Prescriptions**: Patient may have completed treatment or be non-adherent`);
+      insights.push(`**CLEAR - No Active Prescriptions**: Patient may have completed treatment or be non-adherent`);
     }
 
     return insights.join('\n\n');
@@ -416,9 +416,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
     const total = prescriptions.length;
     const rate = total > 0 ? (dispensedOnTime / total * 100).toFixed(1) : 0;
 
-    if (Number(rate) >= 80) return `✅ Excellent (${rate}% filled on time)`;
-    if (Number(rate) >= 60) return `⚡ Moderate (${rate}% filled on time)`;
-    return `⚠️ Poor (${rate}% filled on time) - Adherence intervention needed`;
+    if (Number(rate) >= 80) return `Excellent (${rate}% filled on time)`;
+    if (Number(rate) >= 60) return `Moderate (${rate}% filled on time)`;
+    return `Poor (${rate}% filled on time) - Adherence intervention needed`;
   };
 
   const calculatePrescriptionVelocity = (prescriptions: PrescriptionWithMetadata[]) => {
@@ -428,9 +428,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
     const timeSpan = (Math.max(...dates) - Math.min(...dates)) / (30 * 24 * 60 * 60); // in months
     const velocity = prescriptions.length / Math.max(timeSpan, 1);
 
-    if (velocity > 2) return `⚠️ High (${velocity.toFixed(1)} prescriptions/month)`;
-    if (velocity > 1) return `⚡ Moderate (${velocity.toFixed(1)} prescriptions/month)`;
-    return `✅ Normal (${velocity.toFixed(1)} prescriptions/month)`;
+    if (velocity > 2) return `HIGH (${velocity.toFixed(1)} prescriptions/month)`;
+    if (velocity > 1) return `MODERATE (${velocity.toFixed(1)} prescriptions/month)`;
+    return `NORMAL (${velocity.toFixed(1)} prescriptions/month)`;
   };
 
   const checkTherapeuticDuplication = (medications: string[]) => {
@@ -445,10 +445,10 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
     for (const [className, drugs] of Object.entries(classes)) {
       const found = medications.filter(med => drugs.includes(med));
       if (found.length > 1) {
-        return `⚠️ Duplication detected: Multiple ${className} (${found.join(', ')})`;
+        return `**WARNING:** Duplication detected: Multiple ${className} (${found.join(', ')})`;
       }
     }
-    return '✅ No therapeutic duplication detected';
+    return '**CLEAR:** No therapeutic duplication detected';
   };
 
   const generateSafetyAlerts = (activeMeds: string[], medDetails: any[]) => {
@@ -461,7 +461,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
     );
 
     if (foundHighRisk.length > 0) {
-      alerts.push(`🔴 **High-Risk Medications Present**: ${foundHighRisk.join(', ')}`);
+      alerts.push(`**HIGH RISK - High-Risk Medications Present**: ${foundHighRisk.join(', ')}`);
       alerts.push('   - Requires enhanced monitoring');
       alerts.push('   - Consider more frequent follow-ups');
     }
@@ -473,10 +473,10 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
     );
 
     if (expired.length > 0) {
-      alerts.push(`⚠️ **Expired Active Prescriptions**: ${expired.map(e => e.name).join(', ')}`);
+      alerts.push(`**WARNING - Expired Active Prescriptions**: ${expired.map(e => e.name).join(', ')}`);
     }
 
-    return alerts.length > 0 ? alerts.join('\n') : '✅ No immediate safety alerts';
+    return alerts.length > 0 ? alerts.join('\n') : '**CLEAR:** No immediate safety alerts';
   };
 
   const generateClinicalDecisionSupport = (activeMeds: string[], patient: string) => {
@@ -516,9 +516,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
       return monthsAgo > 3 && monthsAgo <= 6;
     }).length;
 
-    if (recent > older * 1.5) return '📈 Increasing (concerning trend)';
-    if (recent < older * 0.5) return '📉 Decreasing (positive trend)';
-    return '➡️ Stable';
+    if (recent > older * 1.5) return 'INCREASING (concerning trend)';
+    if (recent < older * 0.5) return 'DECREASING (positive trend)';
+    return 'STABLE';
   };
 
   const calculateComplianceScore = (prescriptions: PrescriptionWithMetadata[]) => {
@@ -534,9 +534,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
       return monthsAgo <= 1 && p.status === 0;
     }).length;
 
-    if (recentActive >= 3) return '🔴 High risk - Multiple recent prescriptions';
-    if (recentActive >= 2) return '🟡 Moderate risk - Monitor closely';
-    return '🟢 Low risk - Stable pattern';
+    if (recentActive >= 3) return 'HIGH RISK - Multiple recent prescriptions';
+    if (recentActive >= 2) return 'MODERATE RISK - Monitor closely';
+    return 'LOW RISK - Stable pattern';
   };
 
   const generateProviderActionItems = (activeMeds: string[], multiActive: boolean, highVol: boolean) => {
@@ -628,17 +628,19 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           );
         }
         // Handle warning/alert lines
-        else if (line.includes('⚠️') || line.includes('🔴')) {
+        else if (line.includes('WARNING') || line.includes('HIGH RISK')) {
           elements.push(
-            <div key={`alert-${sectionIndex}-${lineIndex}`} className="bg-orange-50 border-l-4 border-orange-500 p-4 my-4 rounded-r-lg">
+            <div key={`alert-${sectionIndex}-${lineIndex}`} className="bg-orange-50 border-l-4 border-orange-500 p-4 my-4 rounded-r-lg flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
               <p className="text-orange-900 font-medium">{formatTextWithBold(line)}</p>
             </div>
           );
         }
         // Handle success lines
-        else if (line.includes('✅') || line.includes('✓')) {
+        else if (line.includes('CLEAR') || line.includes('LOW RISK')) {
           elements.push(
-            <div key={`success-${sectionIndex}-${lineIndex}`} className="bg-green-50 border-l-4 border-green-500 p-4 my-4 rounded-r-lg">
+            <div key={`success-${sectionIndex}-${lineIndex}`} className="bg-green-50 border-l-4 border-green-500 p-4 my-4 rounded-r-lg flex items-start gap-2">
+              <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
               <p className="text-green-900 font-medium">{formatTextWithBold(line)}</p>
             </div>
           );
@@ -1264,7 +1266,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                         </>
                       ) : (
                         <div className="text-center py-12">
-                          <div className="text-6xl mb-4">📋</div>
+                          <div className="flex justify-center mb-4">
+                            <ClipboardList className="w-16 h-16 text-gray-400" />
+                          </div>
                           <p className="text-gray-600 mb-2">No prescriptions found for this patient.</p>
                           <p className="text-sm text-gray-500">
                             This patient has no prescription history in the system.
@@ -1282,7 +1286,9 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
           {/* Initial State */}
           {!activeTab.hasSearched && (
             <div className="bg-white rounded-lg shadow p-12 text-center">
-              <div className="text-6xl mb-4">🔍</div>
+              <div className="flex justify-center mb-4">
+                <Search className="w-16 h-16 text-blue-600" />
+              </div>
               <h3 className="text-2xl font-bold mb-2">Ready to Search</h3>
               <p className="text-gray-600">
                 Enter patient information above to view their prescription history.
