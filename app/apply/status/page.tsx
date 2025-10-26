@@ -65,7 +65,9 @@ export default function ApplicationStatusPage() {
           {/* NOT CONNECTED STATE */}
           {!isConnected && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
-              <div className="text-6xl mb-4">🔐</div>
+              <div className="flex justify-center mb-4">
+                <Lock className="w-16 h-16 text-blue-600" />
+              </div>
               <h2 className="text-2xl font-bold mb-4">Connect Your Wallet</h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
                 Connect your wallet to view your application status
