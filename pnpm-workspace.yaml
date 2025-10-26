@@ -1,5 +1,7 @@
 onlyBuiltDependencies:
   - bufferutil
+  - core-js
+  - esbuild
   - keccak
   - sharp
   - unrs-resolver
