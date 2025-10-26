@@ -37,6 +37,7 @@ export function ApproveApplicationFlow({
   const [validityYears, setValidityYears] = useState('5');
   const [error, setError] = useState<string | null>(null);
   const [credentialTokenId, setCredentialTokenId] = useState<bigint | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   if (!isOpen) return null;
 
@@ -44,7 +45,15 @@ export function ApproveApplicationFlow({
     application.credentialType === 0 ? CredentialType.Doctor : CredentialType.Pharmacist;
 
   const handleApproveAndIssue = async () => {
+    // Prevent multiple submissions
+    if (isProcessing) {
+      console.log('[ApproveFlow] Already processing, ignoring duplicate click');
+      return;
+    }
+
     try {
+      console.log('[ApproveFlow] Starting approval process');
+      setIsProcessing(true);
       setCurrentStep('executing');
       setError(null);
 
@@ -94,9 +103,10 @@ export function ApproveApplicationFlow({
         handleClose();
       }, 3000);
     } catch (err: any) {
-      console.error('Error in approval flow:', err);
+      console.error('[ApproveFlow] Error in approval flow:', err);
       setError(err.message || 'Failed to approve and issue credential');
       setCurrentStep('credential');
+      setIsProcessing(false);
     }
   };
 
@@ -105,6 +115,7 @@ export function ApproveApplicationFlow({
     setError(null);
     setValidityYears('5');
     setCredentialTokenId(null);
+    setIsProcessing(false);
     onClose();
   };
 
@@ -291,10 +302,10 @@ export function ApproveApplicationFlow({
                   </button>
                   <button
                     onClick={handleApproveAndIssue}
-                    disabled={isApproving || isIssuing || isLinking}
+                    disabled={isProcessing || isApproving || isIssuing || isLinking}
                     className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Approve & Issue Credential
+                    {isProcessing ? 'Processing...' : 'Approve & Issue Credential'}
                   </button>
                 </div>
               </div>
