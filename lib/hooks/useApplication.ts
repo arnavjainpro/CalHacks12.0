@@ -191,6 +191,8 @@ export function useMyApplication() {
  * Get application by ID (admin use)
  */
 export function useApplication(applicationId: bigint | undefined) {
+  console.log('[useApplication] Called with ID:', applicationId?.toString());
+
   const {
     data: application,
     isLoading,
@@ -204,6 +206,14 @@ export function useApplication(applicationId: bigint | undefined) {
     query: {
       enabled: applicationId !== undefined,
     },
+  });
+
+  console.log('[useApplication] Contract call result:', {
+    applicationId: applicationId?.toString(),
+    hasData: !!application,
+    isLoading,
+    error: error?.message,
+    contractAddress: APPLICATION_REGISTRY_ADDRESS,
   });
 
   const [metadata, setMetadata] = useState<ApplicationMetadata | null>(null);

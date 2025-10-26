@@ -9,11 +9,14 @@ import { useIssueCredential, useTotalCredentials } from '@/lib/hooks/useCredenti
 import { CredentialType } from '@/lib/contracts/config';
 import { hashLicenseData } from '@/lib/utils/crypto';
 import { uploadCredentialToIPFS, CredentialMetadata } from '@/lib/utils/ipfs';
+import { useApplicationsByStatus, ApplicationStatus, useTotalApplications } from '@/lib/hooks/useApplication';
 
 export default function AdminDashboard() {
   const { address, isConnected } = useAccount();
   const { issueCredential, isPending } = useIssueCredential();
   const { totalSupply } = useTotalCredentials();
+  const { totalApplications } = useTotalApplications();
+  const { totalCount: pendingCount } = useApplicationsByStatus(ApplicationStatus.Pending, 1, 0);
 
   const [showIssueForm, setShowIssueForm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,7 +102,17 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <header className="border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
+          <div className="flex items-center gap-6">
+            <Link href="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">MedChain</Link>
+            <nav className="flex gap-4">
+              <Link href="/admin" className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                Dashboard
+              </Link>
+              <Link href="/admin/applications" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100">
+                Applications
+              </Link>
+            </nav>
+          </div>
           <WalletStatus />
         </div>
       </header>
@@ -119,7 +132,7 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="grid md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Credentials Issued</div>
               <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
@@ -127,9 +140,15 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Admin Address</div>
-              <div className="text-sm font-mono mt-2 text-gray-800 dark:text-gray-200">
-                {address?.slice(0, 6)}...{address?.slice(-4)}
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Total Applications</div>
+              <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+                {totalApplications?.toString() || '0'}
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Pending Review</div>
+              <div className="text-3xl font-bold text-yellow-600 dark:text-yellow-400">
+                {pendingCount?.toString() || '0'}
               </div>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -139,6 +158,28 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+
+          {/* Quick Actions */}
+          {pendingCount > 0 && (
+            <div className="mb-8 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-100 mb-1">
+                    {pendingCount} Application{pendingCount === 1 ? '' : 's'} Awaiting Review
+                  </h3>
+                  <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                    Review and approve applications to issue credentials
+                  </p>
+                </div>
+                <Link
+                  href="/admin/applications"
+                  className="px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition font-medium"
+                >
+                  Review Applications →
+                </Link>
+              </div>
+            </div>
+          )}
 
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
