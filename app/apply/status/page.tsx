@@ -81,7 +81,9 @@ export default function ApplicationStatusPage() {
           {/* NO APPLICATION FOUND */}
           {isConnected && !application && (
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 text-center">
-              <div className="text-6xl mb-4">📋</div>
+              <div className="flex justify-center mb-4">
+                <ClipboardList className="w-16 h-16 text-gray-600" />
+              </div>
               <h2 className="text-2xl font-bold mb-4">No Application Found</h2>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
                 You haven't submitted a credential application yet.
