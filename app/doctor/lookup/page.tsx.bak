@@ -82,7 +82,7 @@ export default function PatientLookup() {
       [PrescriptionStatus.Active]: 'bg-green-100 text-green-800',
       [PrescriptionStatus.Dispensed]: 'bg-blue-100 text-blue-800',
       [PrescriptionStatus.Cancelled]: 'bg-red-100 text-red-800',
-      [PrescriptionStatus.Expired]: 'bg-gray-100 dark:bg-gray-700 text-gray-800',
+      [PrescriptionStatus.Expired]: 'bg-gray-100 text-gray-800',
     };
     const labels = {
       [PrescriptionStatus.Active]: 'Active',
@@ -122,7 +122,7 @@ export default function PatientLookup() {
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-3xl font-bold mb-4">Connect Your Wallet</h2>
-            <p className="text-gray-600 dark:text-gray-300">Please connect your wallet to access patient lookup.</p>
+            <p className="text-gray-600">Please connect your wallet to access patient lookup.</p>
           </div>
         </main>
       </div>
@@ -140,7 +140,7 @@ export default function PatientLookup() {
         </header>
         <main className="container mx-auto px-4 py-16">
           <div className="max-w-2xl mx-auto text-center">
-            <p className="text-gray-600 dark:text-gray-300">Loading credential...</p>
+            <p className="text-gray-600">Loading credential...</p>
           </div>
         </main>
       </div>
@@ -187,13 +187,13 @@ export default function PatientLookup() {
               ← Back to Dashboard
             </Link>
             <h1 className="text-4xl font-bold mb-2">Patient Prescription Lookup</h1>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-gray-600">
               Search for a patient's prescription history to detect potential prescription abuse.
             </p>
           </div>
 
           {/* Search Form */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-8">
+          <div className="bg-white rounded-lg shadow mb-8">
             <div className="p-6 border-b">
               <h2 className="text-2xl font-bold">Patient Search</h2>
             </div>
@@ -264,8 +264,8 @@ export default function PatientLookup() {
           {hasSearched && (
             <>
               {historyLoading || statusesLoading ? (
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-                  <p className="text-gray-600 dark:text-gray-300">Loading prescription history...</p>
+                <div className="bg-white rounded-lg shadow p-8 text-center">
+                  <p className="text-gray-600">Loading prescription history...</p>
                 </div>
               ) : historyError ? (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-8">
@@ -279,13 +279,13 @@ export default function PatientLookup() {
                   {/* Abuse Detection Summary */}
                   {totalPrescriptions > 0 && (
                     <div className="grid md:grid-cols-4 gap-6 mb-8">
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                      <div className="bg-white rounded-lg shadow p-6">
                         <div className="text-sm text-gray-600 mb-1">Total Prescriptions</div>
                         <div className="text-3xl font-bold text-blue-600">
                           {totalPrescriptions}
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                      <div className="bg-white rounded-lg shadow p-6">
                         <div className="text-sm text-gray-600 mb-1">Active</div>
                         <div className={`text-3xl font-bold ${hasMultipleActive ? 'text-orange-600' : 'text-green-600'}`}>
                           {activePrescriptions.length}
@@ -294,13 +294,13 @@ export default function PatientLookup() {
                           <div className="text-xs text-orange-600 mt-1">⚠️ Multiple active</div>
                         )}
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                      <div className="bg-white rounded-lg shadow p-6">
                         <div className="text-sm text-gray-600 mb-1">Dispensed</div>
                         <div className="text-3xl font-bold text-purple-600">
                           {dispensedCount}
                         </div>
                       </div>
-                      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                      <div className="bg-white rounded-lg shadow p-6">
                         <div className="text-sm text-gray-600 mb-1">Risk Level</div>
                         <div className={`text-2xl font-bold ${
                           hasMultipleActive || hasHighVolume ? 'text-red-600' : 'text-green-600'
@@ -312,7 +312,7 @@ export default function PatientLookup() {
                   )}
 
                   {/* Prescription List */}
-                  <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
+                  <div className="bg-white rounded-lg shadow">
                     <div className="p-6 border-b">
                       <h2 className="text-2xl font-bold">Prescription History</h2>
                     </div>
@@ -347,7 +347,7 @@ export default function PatientLookup() {
                             {prescriptions.map((prescription) => (
                               <div
                                 key={prescription.id.toString()}
-                                className="border rounded-lg p-4 hover:bg-gray-50 dark:bg-gray-700 transition"
+                                className="border rounded-lg p-4 hover:bg-gray-50 transition"
                               >
                                 <div className="flex justify-between items-start">
                                   <div>
@@ -378,7 +378,7 @@ export default function PatientLookup() {
                         <div className="text-center py-12">
                           <div className="text-6xl mb-4">📋</div>
                           <p className="text-gray-600 mb-2">No prescriptions found for this patient.</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-sm text-gray-500">
                             This patient has no prescription history in the system.
                           </p>
                         </div>
@@ -392,10 +392,10 @@ export default function PatientLookup() {
 
           {/* Initial State */}
           {!hasSearched && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
+            <div className="bg-white rounded-lg shadow p-12 text-center">
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-bold mb-2">Ready to Search</h3>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-600">
                 Enter patient information above to view their prescription history.
               </p>
             </div>
