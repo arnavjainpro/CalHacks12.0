@@ -8,7 +8,7 @@ export type CredentialType = 'Doctor' | 'Pharmacist';
 export interface ApplicationFormData {
   // Personal Information
   fullName: string;
-  phone: string; // Optional but recommended
+  phone: string;
 
   // Credential Information
   credentialType: CredentialType;
@@ -112,14 +112,17 @@ export function validateApplicationForm(
     });
   }
 
-  // Phone validation (optional but if provided must be valid)
-  if (data.phone && data.phone.trim().length > 0) {
-    if (!VALIDATION_PATTERNS.phone.test(data.phone)) {
-      errors.push({
-        field: 'phone',
-        message: 'Please enter a valid phone number',
-      });
-    }
+  // Phone validation (required)
+  if (!data.phone || data.phone.trim().length === 0) {
+    errors.push({
+      field: 'phone',
+      message: 'Phone number is required',
+    });
+  } else if (!VALIDATION_PATTERNS.phone.test(data.phone)) {
+    errors.push({
+      field: 'phone',
+      message: 'Please enter a valid phone number',
+    });
   }
 
   // Credential type validation
