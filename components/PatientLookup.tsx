@@ -1210,7 +1210,7 @@ ${generateProviderActionItems(activeMedications, hasMultipleActive, hasHighVolum
                           {(hasMultipleActive || hasHighVolume) && (
                             <div className="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg">
                               <div className="flex items-start gap-3">
-                                <div className="text-2xl">⚠️</div>
+                                <AlertTriangle className="w-6 h-6 text-orange-600 flex-shrink-0" />
                                 <div>
                                   <h4 className="font-semibold text-orange-900 mb-1">
                                     Potential Prescription Abuse Detected
